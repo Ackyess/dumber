@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DUMBER evaluation case",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "platform": { "enum": ["x", "bilibili"] },
+    "context": { "type": "object" },
+    "expectedPromote": { "type": "boolean" },
+    "acceptableDrivers": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "high_emotion",
+          "identity_resonance",
+          "curiosity_gap",
+          "reaction_chain",
+          "frictionless_exploration",
+          "instant_gratification",
+          "status_signal",
+          "mixed"
+        ]
+      },
+      "minItems": 1
+    },
+    "notes": { "type": "string" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceUrl": { "type": "string" },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "redistribution": { "type": "string" }
+      },
+      "required": ["capturedAt", "redistribution"]
+    }
+  },
+  "required": [
+    "id",
+    "platform",
+    "context",
+    "expectedPromote",
+    "acceptableDrivers",
+    "notes",
+    "provenance"
+  ]
+}

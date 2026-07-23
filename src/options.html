@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DUMBER 策展设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">DUMBER / AI CURATION</p>
+        <h1>策展设置</h1>
+        <p class="lede">为高刺激内容提供更清晰、更漂亮、更优先的阅读待遇。</p>
+      </div>
+      <div class="hero-mark" aria-hidden="true">D↑</div>
+    </header>
+
+    <form id="settings-form" novalidate>
+      <section class="panel">
+        <div class="section-heading">
+          <span class="index">01</span>
+          <div>
+            <h2>模型连接</h2>
+            <p>使用 OpenAI-compatible Chat Completions 接口。配置只保存在本机。</p>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <label class="field field-wide">
+            <span>API 地址</span>
+            <input id="api-base-url" type="url" inputmode="url" spellcheck="false" placeholder="https://api.example.com/v1" required>
+          </label>
+
+          <label class="field">
+            <span>模型</span>
+            <input id="model" type="text" spellcheck="false" placeholder="填写可用模型名称" required>
+          </label>
+
+          <label class="field">
+            <span>API Key</span>
+            <span class="password-field">
+              <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="仅保存在 chrome.storage.local" required>
+              <button id="toggle-key" class="inline-button" type="button" aria-label="显示 API Key">显示</button>
+            </span>
+          </label>
+        </div>
+
+        <div class="connection-row">
+          <button id="test-button" class="button secondary" type="button">测试模型连接</button>
+          <p class="privacy-note">从 v0.1 升级时，旧开发凭据会被主动清除，需要重新配置。</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="index">02</span>
+          <div>
+            <h2>推广策略</h2>
+            <p>模型负责挑选，阅读渲染器负责放大、展开和提升可读性。</p>
+          </div>
+        </div>
+
+        <label class="range-field">
+          <span>
+            <strong>推广阈值</strong>
+            <small>分数越高，入选 DUMBER 精选的内容越集中。</small>
+          </span>
+          <input id="promotion-threshold" type="range" min="0.5" max="0.95" step="0.01">
+          <output id="threshold-output" for="promotion-threshold">72%</output>
+        </label>
+
+        <div class="toggle-grid">
+          <label class="toggle-card">
+            <input id="x-enabled" type="checkbox">
+            <span class="toggle-ui" aria-hidden="true"></span>
+            <span><strong>X</strong><small>推文、引用推文与链接标题</small></span>
+          </label>
+          <label class="toggle-card">
+            <input id="bilibili-enabled" type="checkbox">
+            <span class="toggle-ui" aria-hidden="true"></span>
+            <span><strong>Bilibili</strong><small>视频卡片、动态与 BewlyBewly</small></span>
+          </label>
+          <label class="toggle-card">
+            <input id="personalization-enabled" type="checkbox">
+            <span class="toggle-ui" aria-hidden="true"></span>
+            <span><strong>本地个性化</strong><small>使用“更多这种 / 少一点”调整推广阈值</small></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="index">03</span>
+          <div>
+            <h2>本地数据</h2>
+            <p>偏好画像、模型缓存和工程指标不会上传到 DUMBER 服务。</p>
+          </div>
+        </div>
+
+        <div class="stats" aria-live="polite">
+          <div><strong id="cache-count">—</strong><span>缓存判定</span></div>
+          <div><strong id="profile-actions">—</strong><span>偏好操作</span></div>
+          <div><strong id="visual-p95">—</strong><span>视觉延迟 p95</span></div>
+        </div>
+
+        <div class="data-actions">
+          <button id="export-button" class="button secondary" type="button">导出本地数据</button>
+          <button id="clear-button" class="button danger" type="button">清除缓存、偏好与指标</button>
+        </div>
+      </section>
+
+      <div class="form-footer">
+        <p id="status" role="status" aria-live="polite"></p>
+        <button class="button primary" type="submit">保存设置</button>
+      </div>
+    </form>
+  </main>
+
+  <script src="shared.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f7f8fa;
+  background: #111218;
+}
+
+* { box-sizing: border-box; }
+body {
+  width: 340px;
+  margin: 0;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 0 0, rgba(143, 255, 216, .1), transparent 12rem),
+    radial-gradient(circle at 100% 0, rgba(185, 140, 255, .14), transparent 14rem),
+    #111218;
+}
+
+header { display: flex; align-items: center; gap: 12px; }
+.mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: #15121b;
+  background: conic-gradient(from 30deg, #8fffd8, #8ecbff, #c49bff, #ff95bd, #ffe274, #8fffd8);
+  border-radius: 14px;
+  font: 950 17px/1 ui-monospace, monospace;
+}
+.name { margin: 0 0 4px; font-size: 14px; font-weight: 900; letter-spacing: .12em; }
+#state { margin: 0; color: #aeb2bd; font-size: 12px; }
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0 12px;
+}
+.metrics div {
+  display: grid;
+  gap: 5px;
+  padding: 11px;
+  background: rgba(255, 255, 255, .055);
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 12px;
+}
+.metrics strong { font-size: 18px; line-height: 1; }
+.metrics span { color: #9095a2; font-size: 9px; }
+
+.switch-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  background: rgba(255, 255, 255, .055);
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 13px;
+  cursor: pointer;
+}
+.switch-row > span:first-child { display: grid; gap: 4px; }
+.switch-row strong { font-size: 12px; }
+.switch-row small { color: #9095a2; font-size: 10px; }
+.switch-row input { position: absolute; opacity: 0; }
+.switch {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  background: #343743;
+  border-radius: 999px;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 150ms ease;
+}
+.switch-row input:checked + .switch { background: #9dcc59; }
+.switch-row input:checked + .switch::after { transform: translateX(16px); }
+.switch-row:has(input:focus-visible) { outline: 2px solid #caff7a; outline-offset: 2px; }
+
+button {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 10px;
+  color: #15170f;
+  background: #caff7a;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  font: 850 12px/1 ui-sans-serif, system-ui, sans-serif;
+}

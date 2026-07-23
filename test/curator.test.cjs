@@ -1,0 +1,130 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+require("../src/shared.js");
+const Curator = require("../src/curator.js");
+
+const settings = {
+  model: "test-model"
+};
+
+test("builds the new curation schema", () => {
+  const payload = Curator.createRequestPayload(settings, [{
+    id: "item-1",
+    context: { text: "热门争议内容" }
+  }]);
+  const schema = payload.response_format.json_schema.schema;
+  const properties = schema.properties.curations.items.properties;
+  assert.deepEqual(Object.keys(properties), [
+    "id",
+    "promote",
+    "dopamineScore",
+    "durableValue",
+    "primaryDriver",
+    "promotionLabel"
+  ]);
+  assert.equal(schema.properties.curations.minItems, 1);
+  assert.equal(schema.properties.curations.maxItems, 8);
+  assert.equal(payload.messages[1].content.includes("item-1"), true);
+});
+
+test("parses structured model output", () => {
+  const body = {
+    choices: [{
+      message: {
+        content: JSON.stringify({
+          curations: [{
+            id: "item-1",
+            promote: true,
+            dopamineScore: 0.91,
+            durableValue: 0.2,
+            primaryDriver: "high_emotion",
+            promotionLabel: "高情绪浓度"
+          }]
+        })
+      }
+    }]
+  };
+  const [result] = Curator.parseCurationResponse(body, ["item-1"]);
+  assert.equal(result.promote, true);
+  assert.equal(result.primaryDriver, "high_emotion");
+});
+
+test("single-flight batcher deduplicates keys and never overlaps workers", async () => {
+  let activeWorkers = 0;
+  let maximumActive = 0;
+  const calls = [];
+  const batcher = Curator.createSingleFlightBatcher({
+    maxBatchSize: 2,
+    delayMs: 1,
+    worker: async (entries) => {
+      activeWorkers += 1;
+      maximumActive = Math.max(maximumActive, activeWorkers);
+      calls.push(entries.map((entry) => entry.key));
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      activeWorkers -= 1;
+      return new Map(entries.map((entry) => [entry.key, entry.value * 2]));
+    }
+  });
+
+  const [one, duplicate, two, three] = await Promise.all([
+    batcher.enqueue("one", 2),
+    batcher.enqueue("one", 999),
+    batcher.enqueue("two", 3),
+    batcher.enqueue("three", 4)
+  ]);
+
+  assert.equal(one, 4);
+  assert.equal(duplicate, 4);
+  assert.equal(two, 6);
+  assert.equal(three, 8);
+  assert.equal(maximumActive, 1);
+  assert.deepEqual(calls, [["one", "two"], ["three"]]);
+});
+
+test("single-flight batcher joins a duplicate that arrives while the worker is active", async () => {
+  let releaseWorker;
+  let workerCalls = 0;
+  let workerStarted;
+  const started = new Promise((resolve) => { workerStarted = resolve; });
+  const gate = new Promise((resolve) => { releaseWorker = resolve; });
+  const batcher = Curator.createSingleFlightBatcher({
+    delayMs: 0,
+    worker: async (entries) => {
+      workerCalls += 1;
+      workerStarted();
+      await gate;
+      return new Map(entries.map((entry) => [entry.key, entry.value]));
+    }
+  });
+
+  const first = batcher.enqueue("active-key", "first");
+  await started;
+  const duplicate = batcher.enqueue("active-key", "ignored");
+  assert.equal(batcher.state().active, 1);
+  releaseWorker();
+
+  assert.deepEqual(await Promise.all([first, duplicate]), ["first", "first"]);
+  assert.equal(workerCalls, 1);
+});
+
+test("clearing the batcher rejects pending and active waiters", async () => {
+  let workerStarted;
+  const started = new Promise((resolve) => { workerStarted = resolve; });
+  const batcher = Curator.createSingleFlightBatcher({
+    delayMs: 0,
+    worker: async () => {
+      workerStarted();
+      await new Promise((resolve) => setTimeout(resolve, 12));
+      return new Map([["active", "late"]]);
+    }
+  });
+
+  const active = batcher.enqueue("active", "value");
+  await started;
+  const pending = batcher.enqueue("pending", "value");
+  batcher.clear(new Error("cleared"));
+
+  await assert.rejects(active, /cleared/);
+  await assert.rejects(pending, /cleared/);
+  assert.deepEqual(batcher.state(), { pending: 0, active: 0, running: true });
+});

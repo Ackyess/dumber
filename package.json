@@ -1,0 +1,15 @@
+{
+  "name": "dumber-extension",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "test": "node --test test/*.test.cjs",
+    "evaluate:seed": "node scripts/evaluate.mjs --gold evaluation/seed.synthetic.jsonl --pred evaluation/seed.predictions.jsonl",
+    "test:browser": "python3 test/browser_smoke.py",
+    "package": "python3 scripts/package.py"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

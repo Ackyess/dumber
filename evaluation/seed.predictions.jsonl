@@ -1,0 +1,4 @@
+{"id":"syn-x-001","promote":true,"dopamineScore":0.91,"durableValue":0.18,"primaryDriver":"high_emotion","promotionLabel":"高情绪浓度"}
+{"id":"syn-x-002","promote":false,"dopamineScore":0.32,"durableValue":0.71,"primaryDriver":"mixed","promotionLabel":"DUMBER 精选"}
+{"id":"syn-b-001","promote":true,"dopamineScore":0.88,"durableValue":0.22,"primaryDriver":"curiosity_gap","promotionLabel":"强好奇驱动"}
+{"id":"syn-b-002","promote":false,"dopamineScore":0.27,"durableValue":0.9,"primaryDriver":"mixed","promotionLabel":"DUMBER 精选"}

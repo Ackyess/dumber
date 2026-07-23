@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run evaluate:seed
+      - name: Verify reproducible release archives
+        env:
+          SOURCE_DATE_EPOCH: "1784764800"
+        run: |
+          npm run package
+          sha256sum dist/*.zip > /tmp/dumber-first.sha256
+          npm run package
+          sha256sum dist/*.zip > /tmp/dumber-second.sha256
+          diff -u /tmp/dumber-first.sha256 /tmp/dumber-second.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dumber-extension
+          path: |
+            dist/*.zip
+            dist/*.sha256
+
+  chromium-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install playwright==1.57.0
+      - run: python -m playwright install --with-deps chromium
+      - run: npm ci
+      - run: npm run test:browser

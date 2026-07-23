@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DUMBER</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="mark" aria-hidden="true">D↑</div>
+    <div>
+      <p class="name">DUMBER</p>
+      <p id="state">读取策展状态…</p>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="今日策展指标">
+    <div><strong id="promotions">—</strong><span>今日推广</span></div>
+    <div><strong id="streak">—</strong><span>连续命中</span></div>
+    <div><strong id="cache-rate">—</strong><span>缓存命中</span></div>
+  </section>
+
+  <label class="switch-row">
+    <span><strong>启用 DUMBER 精选</strong><small>在 X 与 Bilibili 自动策展</small></span>
+    <input id="enabled" type="checkbox">
+    <span class="switch" aria-hidden="true"></span>
+  </label>
+
+  <button id="settings" type="button">打开策展设置</button>
+
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
