@@ -19,6 +19,7 @@
   const memoryCurations = new Map();
   const reportedDecisions = new Set();
   const metricEvents = [];
+  const MAX_CARD_RETRIES = 1;
 
   let settings = Shared.DEFAULT_SETTINGS;
   let profile = Shared.DEFAULT_PROFILE;
@@ -212,7 +213,8 @@
       queuedAt: performance.now(),
       preferenceContext: Shared.sanitizePreferenceContext({
         ...descriptor.preferenceContext,
-        platform
+        platform,
+        fingerprint
       })
     };
 
@@ -230,16 +232,24 @@
       return;
     }
 
+    const keepPriorPromotion = existing?.state === "promoted"
+      && sameStableIdentity(existing.candidate, candidate);
     if (existing) {
       intersection.unobserve(card);
       removeCandidateFromPending(existing.candidate);
-      renderer.unmark(card);
+      if (!keepPriorPromotion) renderer.unmark(card);
     }
 
     trackedCards.add(card);
     card.dataset.dumberFingerprint = fingerprint;
     card.dataset.dumberState = "observing";
-    cardRecords.set(card, { candidate, state: "observing", errorAt: 0, requestEpoch: -1 });
+    cardRecords.set(card, {
+      candidate,
+      state: "observing",
+      errorAt: 0,
+      requestEpoch: -1,
+      retryCount: 0
+    });
 
     const remembered = memoryCurations.get(memoryKey(fingerprint));
     if (remembered) {
@@ -367,8 +377,11 @@
       record.state = "error";
       record.errorAt = Date.now();
       record.requestEpoch = -1;
+      record.retryCount = (record.retryCount || 0) + 1;
       candidate.card.dataset.dumberState = "error";
-      retryCandidates.push({ candidate, errorAt: record.errorAt });
+      if (record.retryCount <= MAX_CARD_RETRIES) {
+        retryCandidates.push({ candidate, errorAt: record.errorAt });
+      }
     }
     if (!retryCandidates.length) return;
     const retryAfterMs = errorCode === "DUMBER_ENDPOINT_PERMISSION_REQUIRED" ? 60000 : 15000;
@@ -407,12 +420,14 @@
       record.state = "promoted";
       record.requestEpoch = -1;
       record.errorAt = 0;
+      record.retryCount = 0;
       card.dataset.dumberState = "promoted";
     } else {
       renderer.unmark(card);
       record.state = "ready";
       record.requestEpoch = -1;
       record.errorAt = 0;
+      record.retryCount = 0;
       card.dataset.dumberState = "ready";
     }
 
@@ -462,6 +477,7 @@
       record.state = "observing";
       record.requestEpoch = -1;
       record.errorAt = 0;
+      record.retryCount = 0;
       record.candidate.queuedAt = performance.now();
       card.dataset.dumberState = "observing";
       intersection.observe(card);
@@ -614,6 +630,10 @@
     return !elementsCarryClass(next?.primaryElements, "dumber-primary")
       || !elementsCarryClass(next?.secondaryElements, "dumber-secondary")
       || !elementsCarryClass(next?.expandableElements, "dumber-expanded");
+  }
+
+  function sameStableIdentity(left, right) {
+    return Boolean(left?.stableId && right?.stableId && left.stableId === right.stableId);
   }
 
   function sameElementSet(left, right) {

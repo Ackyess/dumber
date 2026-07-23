@@ -16,10 +16,12 @@
 
   const SETTINGS_SCHEMA_VERSION = 2;
   const CACHE_SCHEMA_VERSION = 3;
-  const PROFILE_SCHEMA_VERSION = 1;
+  const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
-  const PROMPT_VERSION = "curator-2026-07-23-v1";
+  const PROMPT_VERSION = "curator-2026-07-23-v2";
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
+  // ponytail: fixed high-precision veto; make it configurable only after a real regression set justifies it.
+  const MAX_PROMOTABLE_DURABLE_VALUE = 0.45;
 
   const DRIVER_LABELS = Object.freeze({
     high_emotion: "高情绪浓度",
@@ -51,6 +53,7 @@
     drivers: Object.freeze({}),
     accounts: Object.freeze({}),
     topics: Object.freeze({}),
+    items: Object.freeze({}),
     totalActions: 0,
     updatedAt: 0
   });
@@ -312,6 +315,7 @@
       drivers: normalizePreferenceBucket(source.drivers, 24),
       accounts: normalizePreferenceBucket(source.accounts, 160),
       topics: normalizePreferenceBucket(source.topics, 160),
+      items: normalizePreferenceBucket(source.items, 800),
       totalActions: Math.max(0, Math.floor(finiteNumber(source.totalActions, 0))),
       updatedAt: Math.max(0, Math.floor(finiteNumber(source.updatedAt, 0)))
     };
@@ -323,6 +327,7 @@
       platform: normalizeText(source.platform).slice(0, 32),
       primaryDriver: normalizeDriver(source.primaryDriver),
       author: normalizeText(source.author).toLowerCase().slice(0, 120),
+      fingerprint: normalizeText(source.fingerprint).slice(0, 160),
       topics: Array.isArray(source.topics)
         ? [...new Set(source.topics.map((topic) => normalizeText(topic).toLowerCase()).filter(Boolean))].slice(0, 5)
         : []
@@ -354,12 +359,14 @@
       drivers: { ...profile.drivers },
       accounts: { ...profile.accounts },
       topics: { ...profile.topics },
+      items: { ...profile.items },
       totalActions: profile.totalActions + 1,
       updatedAt: now
     };
 
     updatePreferenceEntry(next.drivers, context.primaryDriver, direction * 0.08, action, now);
     updatePreferenceEntry(next.accounts, preferenceAccountKey(context), direction * 0.05, action, now);
+    updatePreferenceEntry(next.items, context.fingerprint, direction * 0.3, action, now);
     for (const topic of context.topics.slice(0, 3)) {
       updatePreferenceEntry(next.topics, `${context.platform || "feed"}:${topic}`, direction * 0.025, action, now);
     }
@@ -382,18 +389,28 @@
   function getPromotionDecision(curation, settingsValue, profileValue, contextValue) {
     const settings = sanitizeSettings(settingsValue);
     const baseScore = clamp(finiteNumber(curation?.dopamineScore, 0), 0, 1);
+    const durableValue = clamp(finiteNumber(curation?.durableValue, 0.5), 0, 1);
+    const context = sanitizePreferenceContext({
+      ...contextValue,
+      primaryDriver: curation?.primaryDriver
+    });
+    const itemVeto = normalizeProfile(profileValue).items[context.fingerprint]?.score <= -0.25;
     const boost = settings.personalizationEnabled
-      ? preferenceBoost(profileValue, {
-          ...contextValue,
-          primaryDriver: curation?.primaryDriver
-        })
+      ? preferenceBoost(profileValue, context)
       : 0;
     const adjustedScore = clamp(baseScore + boost, 0, 1);
+    const durableEligible = durableValue <= MAX_PROMOTABLE_DURABLE_VALUE;
     return {
-      promote: curation?.promote === true && adjustedScore >= settings.promotionThreshold,
+      promote: curation?.promote === true
+        && durableEligible
+        && !itemVeto
+        && adjustedScore >= settings.promotionThreshold,
       baseScore,
       boost,
       adjustedScore,
+      durableValue,
+      durableEligible,
+      itemVeto,
       threshold: settings.promotionThreshold
     };
   }
@@ -496,6 +513,7 @@
     DRIVER_LABELS,
     EXTRACTOR_VERSION,
     LEGACY_CACHE_KEYS,
+    MAX_PROMOTABLE_DURABLE_VALUE,
     METRICS_KEY,
     METRICS_SCHEMA_VERSION,
     PROFILE_KEY,

@@ -25,6 +25,8 @@ test("builds the new curation schema", () => {
   assert.equal(schema.properties.curations.minItems, 1);
   assert.equal(schema.properties.curations.maxItems, 8);
   assert.equal(payload.messages[1].content.includes("item-1"), true);
+  assert.match(Curator.SYSTEM_PROMPT, /concrete project release/);
+  assert.match(Curator.SYSTEM_PROMPT, /Curiosity.*alone are never sufficient/);
 });
 
 test("uses low reasoning only for grok-4.5", () => {

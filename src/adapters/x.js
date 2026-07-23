@@ -9,8 +9,11 @@
 
   function matches(locationLike, documentLike) {
     const hostname = String(locationLike?.hostname || "").toLowerCase();
+    const pathname = String(locationLike?.pathname || "");
     const preview = documentLike?.documentElement?.dataset?.dumberPlatform;
-    return hostname === "x.com" || hostname === "twitter.com" || preview === "x";
+    if (preview === "x") return true;
+    if (hostname !== "x.com" && hostname !== "twitter.com") return false;
+    return !/^\/messages(?:\/|$)/.test(pathname);
   }
 
   function statusIdentity(card) {

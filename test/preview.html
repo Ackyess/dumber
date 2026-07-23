@@ -43,7 +43,7 @@
       personalizationEnabled: true,
       requestTimeoutMs: 12000
     };
-    let profile = { schemaVersion: 1, drivers: {}, accounts: {}, topics: {}, totalActions: 0, updatedAt: 0 };
+    let profile = { schemaVersion: 2, drivers: {}, accounts: {}, topics: {}, items: {}, totalActions: 0, updatedAt: 0 };
     const changeListeners = [];
     window.__dumberTest = { curateCalls: 0, preferences: [], events: [] };
 
@@ -67,7 +67,7 @@
           }
           if (message.type === "preferenceAction") {
             window.__dumberTest.preferences.push(message.action);
-            profile = { ...profile, totalActions: profile.totalActions + 1, updatedAt: Date.now() };
+            profile = window.DumberShared.applyPreferenceAction(profile, message.action, message.context);
             return { ok: true, profile };
           }
           if (message.type === "runtimeEvents") {

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "DUMBER — AI 高刺激内容策展",
-  "version": "0.3.0",
-  "description": "真诚挑选、优化并推广 X 与 Bilibili 信息流中的高刺激内容。",
+  "version": "0.3.1",
+  "description": "真诚挑选、优化并推广 X 与 Bilibili 信息流中的高刺激、低持久价值内容。",
   "minimum_chrome_version": "114",
   "icons": {
     "16": "assets/icon-16.png",

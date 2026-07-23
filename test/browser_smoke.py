@@ -90,7 +90,7 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
             personalizationEnabled: true,
             requestTimeoutMs: 12000
           };
-          let profile = { schemaVersion: 1, drivers: {}, accounts: {}, topics: {}, totalActions: 0, updatedAt: 0 };
+          let profile = { schemaVersion: 2, drivers: {}, accounts: {}, topics: {}, items: {}, totalActions: 0, updatedAt: 0 };
           const storageListeners = [];
           const buildResponse = (message, overrides = {}) => ({
             ok: true,
@@ -138,7 +138,7 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
                 }
                 if (message.type === "preferenceAction") {
                   window.__dumberTest.preferences.push(message.action);
-                  profile = { ...profile, totalActions: profile.totalActions + 1, updatedAt: Date.now() };
+                  profile = window.DumberShared.applyPreferenceAction(profile, message.action, message.context);
                   return { ok: true, profile };
                 }
                 if (message.type === "runtimeEvents") {
@@ -248,6 +248,7 @@ def run() -> None:
             "element => { element.textContent = '暂停过程中返回的旧请求绝不能重新标记这张卡片。'; }"
         )
         page.wait_for_function("document.querySelector('article').dataset.dumberState === 'requesting'")
+        assert page.locator("article.dumber-vip").count() == 1
         page.evaluate("window.__dumberTest.updateSettings({ enabled: false })")
         page.wait_for_function("!document.querySelector('article').classList.contains('dumber-vip')")
         page.evaluate("window.__dumberTest.resolveDeferred({ promotionLabel: '旧暂停结果' })")
@@ -282,6 +283,15 @@ def run() -> None:
             arg=old_fingerprint,
         )
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.close()
+
+        page = create_fixture_page(browser, "x")
+        page.locator("article.dumber-vip").wait_for(state="visible")
+        page.locator("article.dumber-vip").hover()
+        page.locator(".dumber-sidecar-visible").wait_for(state="visible")
+        page.locator('.dumber-sidecar button[data-action="less"]').click()
+        page.wait_for_function("!document.querySelector('article').classList.contains('dumber-vip')")
+        assert page.evaluate("window.__dumberTest.preferences") == ["less"]
         page.close()
 
         page = create_fixture_page(browser, "bilibili")

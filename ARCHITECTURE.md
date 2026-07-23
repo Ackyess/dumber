@@ -86,7 +86,7 @@ content fingerprint
 
 `storage.session` 提供 service worker 重启后的热缓存，`storage.local` 提供浏览器重启后的持久缓存。
 
-缓存、指标和画像分别使用串行 mutation chain，避免异步 read-modify-write 互相覆盖。缓存 schema 当前为 V3；旧缓存键在安装迁移和清除操作中删除。
+缓存、指标和画像分别使用串行 mutation chain，避免异步 read-modify-write 互相覆盖。缓存 schema 当前为 V3，画像 schema 为 V2；旧缓存键在安装迁移和清除操作中删除。
 
 ## 5. 站点适配器
 
@@ -114,7 +114,7 @@ content fingerprint
 
 ```text
 observing → queued → requesting → promoted | ready
-                               ↘ error → delayed retry
+                               ↘ error → one delayed retry
 ```
 
 关键约束：

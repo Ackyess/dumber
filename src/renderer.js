@@ -556,7 +556,7 @@
       feedback.textContent = "正在保存…";
       try {
         await onPreference(action, activePayload);
-        feedback.textContent = action === "more" ? "已记录：更多这种" : "已记录：少一点";
+        feedback.textContent = action === "more" ? "已记录：更多这种" : "已记录：这条真有用";
       } catch {
         feedback.textContent = "本次偏好未保存";
         moreButton.disabled = false;
@@ -596,7 +596,7 @@
       </div>
       <div class="dumber-sidecar-actions">
         <button type="button" data-action="more">更多这种</button>
-        <button type="button" data-action="less">少一点</button>
+        <button type="button" data-action="less">这条真有用</button>
         <span class="dumber-sidecar-feedback" role="status" aria-live="polite"></span>
       </div>
     `;

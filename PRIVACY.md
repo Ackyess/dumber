@@ -26,7 +26,7 @@ DUMBER 使用 `chrome.storage.local` 保存：
 - API 地址、模型和 API Key；
 - 开关与推广阈值；
 - 结构化判定缓存；
-- `更多这种 / 少一点` 偏好画像；
+- `更多这种 / 这条真有用` 偏好画像；
 - 聚合工程指标。
 
 `chrome.storage.session` 还保存同一浏览器会话内的判定热缓存。

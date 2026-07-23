@@ -183,6 +183,22 @@ test("background reconstructs OpenAI-compatible streaming responses", async () =
   assert.equal(response.curations[0].promotionLabel, "强好奇驱动");
 });
 
+test("background distinguishes an unfinished stream from missing response headers", async () => {
+  const harness = createHarness(async () => ({
+    ok: true,
+    status: 200,
+    statusText: "OK",
+    headers: new Headers({ "Content-Type": "text/event-stream" }),
+    async text() {
+      throw new DOMException("Aborted", "AbortError");
+    }
+  }));
+  const response = await harness.send(curationMessage());
+
+  assert.equal(response.ok, false);
+  assert.match(response.error, /已开始响应.*未.*完成/);
+});
+
 test("dashboard distinguishes saved credentials from a revoked endpoint permission", async () => {
   const harness = createHarness(
     async (_url, init) => successResponseForRequest(init),

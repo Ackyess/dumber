@@ -294,8 +294,7 @@ function isSchemaCompatibilityError(body) {
 }
 
 async function executePayload(settings, payload, generation) {
-  const response = await fetchWithRetry(settings, payload, generation);
-  const rawBody = await response.text().catch(() => "");
+  const { response, rawBody } = await fetchWithRetry(settings, payload, generation);
   let body = {};
   if (rawBody) {
     try {
@@ -312,7 +311,8 @@ async function fetchWithRetry(settings, payload, generation) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     assertGeneration(generation);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), settings.requestTimeoutMs);
+    let phase = "start";
+    let timeout = setTimeout(() => controller.abort(), settings.requestTimeoutMs);
     activeControllers.add(controller);
     let response;
     try {
@@ -331,33 +331,42 @@ async function fetchWithRetry(settings, payload, generation) {
         credentials: "omit"
       });
       clearTimeout(timeout);
-      if (response.ok && response.headers.get("Content-Type")?.toLowerCase().includes("text/event-stream")) {
-        response = await collapseEventStream(response);
+      timeout = 0;
+
+      if (attempt === 0 && Shared.isRetryableStatus(response.status)) {
+        phase = "completion";
+        timeout = setTimeout(() => controller.abort(), settings.requestTimeoutMs);
+        await response.arrayBuffer();
+        clearTimeout(timeout);
+        timeout = 0;
+        await mutateMetrics((metrics) => {
+          metrics.retries += 1;
+        }, generation);
+        await delay(retryDelay(response.headers.get("Retry-After")));
+        assertGeneration(generation);
+        continue;
       }
+
+      phase = "completion";
+      timeout = setTimeout(() => controller.abort(), settings.requestTimeoutMs);
+      const rawBody = response.ok
+        && response.headers.get("Content-Type")?.toLowerCase().includes("text/event-stream")
+        ? await collapseEventStream(response)
+        : await response.text();
+      return { response, rawBody };
     } catch (error) {
       if (generation !== dataGeneration) throw createCancellationError();
       if (error?.name === "AbortError") {
-        throw new Error(`模型在 ${Math.round(settings.requestTimeoutMs / 1000)} 秒内未开始响应。`);
+        const seconds = Math.round(settings.requestTimeoutMs / 1000);
+        throw new Error(phase === "start"
+          ? `模型在 ${seconds} 秒内未开始响应。`
+          : `模型已开始响应，但未在随后 ${seconds} 秒内完成。`);
       }
       throw new Error(`无法连接模型 API：${error?.message || "网络错误"}`);
     } finally {
-      clearTimeout(timeout);
+      if (timeout) clearTimeout(timeout);
       activeControllers.delete(controller);
     }
-
-    assertGeneration(generation);
-
-    if (attempt === 0 && Shared.isRetryableStatus(response.status)) {
-      await mutateMetrics((metrics) => {
-        metrics.retries += 1;
-      }, generation);
-      const delayMs = retryDelay(response.headers.get("Retry-After"));
-      await response.arrayBuffer().catch(() => null);
-      await delay(delayMs);
-      assertGeneration(generation);
-      continue;
-    }
-    return response;
   }
   throw new Error("模型请求未返回结果。");
 }
@@ -381,12 +390,8 @@ async function collapseEventStream(response) {
     if (typeof content === "string") parts.push(content);
   }
   if (!parts.length) throw new Error("模型流未返回内容。");
-  return new Response(JSON.stringify({
+  return JSON.stringify({
     choices: [{ message: { content: parts.join("") } }]
-  }), {
-    status: response.status,
-    statusText: response.statusText,
-    headers: { "Content-Type": "application/json" }
   });
 }
 

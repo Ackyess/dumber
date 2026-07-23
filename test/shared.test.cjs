@@ -5,6 +5,7 @@ const Shared = require("../src/shared.js");
 const {
   DEFAULT_SETTINGS,
   EXTRACTOR_VERSION,
+  MAX_PROMOTABLE_DURABLE_VALUE,
   PROMPT_VERSION,
   SETTINGS_SCHEMA_VERSION,
   applyPreferenceAction,
@@ -166,6 +167,7 @@ test("local preference actions alter only the relevant promotion score", () => {
   const context = {
     platform: "x",
     author: "example",
+    fingerprint: "item-fingerprint",
     primaryDriver: "curiosity_gap",
     topics: ["science"]
   };
@@ -180,12 +182,79 @@ test("local preference actions alter only the relevant promotion score", () => {
   const decision = getPromotionDecision({
     promote: true,
     dopamineScore: 0.72,
+    durableValue: 0.2,
     primaryDriver: "curiosity_gap"
   }, settings, profile, context);
 
   assert.ok(decision.boost > 0);
   assert.equal(decision.promote, true);
   assert.equal(profile.totalActions, 1);
+});
+
+test("durable value is a hard promotion gate", () => {
+  const context = {
+    platform: "x",
+    author: "favorite",
+    fingerprint: "valuable-item",
+    primaryDriver: "curiosity_gap",
+    topics: ["projects"]
+  };
+  let profile = normalizeProfile();
+  for (let index = 0; index < 6; index += 1) {
+    profile = applyPreferenceAction(profile, "more", context, index + 1);
+  }
+  const settings = sanitizeSettings({
+    schemaVersion: SETTINGS_SCHEMA_VERSION,
+    model: "test",
+    apiKey: "key",
+    promotionThreshold: 0.72,
+    personalizationEnabled: true
+  });
+  const base = {
+    promote: true,
+    dopamineScore: 0.95,
+    primaryDriver: "curiosity_gap"
+  };
+
+  const valuable = getPromotionDecision({
+    ...base,
+    durableValue: MAX_PROMOTABLE_DURABLE_VALUE + 0.01
+  }, settings, profile, context);
+  const disposable = getPromotionDecision({
+    ...base,
+    durableValue: MAX_PROMOTABLE_DURABLE_VALUE
+  }, settings, profile, context);
+
+  assert.ok(valuable.boost > 0);
+  assert.equal(valuable.promote, false);
+  assert.equal(valuable.durableEligible, false);
+  assert.equal(disposable.promote, true);
+});
+
+test("less feedback vetoes the same item immediately", () => {
+  const context = {
+    platform: "x",
+    author: "example",
+    fingerprint: "same-item",
+    primaryDriver: "curiosity_gap",
+    topics: ["science"]
+  };
+  const profile = applyPreferenceAction(normalizeProfile(), "less", context, 1000);
+  const decision = getPromotionDecision({
+    promote: true,
+    dopamineScore: 0.95,
+    durableValue: 0.1,
+    primaryDriver: "curiosity_gap"
+  }, {
+    schemaVersion: SETTINGS_SCHEMA_VERSION,
+    model: "test",
+    apiKey: "key",
+    promotionThreshold: 0.72
+  }, profile, context);
+
+  assert.equal(profile.items["same-item"].less, 1);
+  assert.equal(decision.itemVeto, true);
+  assert.equal(decision.promote, false);
 });
 
 test("settings clamp the supported promotion range", () => {
