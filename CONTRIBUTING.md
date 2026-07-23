@@ -27,6 +27,8 @@ npm run package
 
 ## 修改站点适配器
 
+当前发布目标只包含 X。Bilibili/BewlyBewly 适配器是未启用底座；恢复它们需要单独的范围决策和真实站点稳定性验收。
+
 不得在 `content.js` 添加站点 selector。所有平台差异必须保留在 `src/adapters/`。提交应附：
 
 - 最小匿名 DOM fixture；

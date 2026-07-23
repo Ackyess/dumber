@@ -6,11 +6,11 @@ DUMBER 是一个 Chrome Manifest V3 扩展。它不是过滤器、警告器或�
 
 ## 运行时体验
 
-DUMBER 会读取进入视口的 X 与 Bilibili 内容卡片，把可见上下文发送到用户自行配置的 OpenAI-compatible Chat Completions 接口。模型返回结构化策展结果后，命中内容会被升级为 VIP 阅读卡片：
+DUMBER 会读取进入视口的 X 内容卡片，把可见上下文发送到用户自行配置的 OpenAI-compatible Chat Completions 接口。模型返回结构化策展结果后，命中内容会被升级为 VIP 阅读卡片：
 
 - 虹彩只存在于边缘和环境光，不覆盖正文；
 - 正文获得稳定、高对比度的阅读平面；
-- 主要文字字号与行距提升，截断标题尽可能完整展开；
+- 保留 X 原有的字号、字重、行距、换行和卡片尺寸，不因标记触发布局重排；
 - 时间、播放量和次要按钮被适度弱化，但功能不被删除；
 - 全页面只维护一个 hover sidecar，自动停靠在卡片外侧；
 - 虹彩由独立的 Web Animations 动画驱动，不覆盖宿主卡片已有的 CSS 动画；
@@ -32,17 +32,9 @@ DUMBER 会读取进入视口的 X 与 Bilibili 内容卡片，把可见上下文
 - 可见链接卡片标题；
 - canonical status ID 与 URL。
 
-### Bilibili
+### 暂缓的平台
 
-提取内容包括：
-
-- 视频或动态标题；
-- UP 主；
-- 卡片内可见简介；
-- 可见标签和话题；
-- BV ID、动态 ID 与 URL。
-
-BewlyBewly 通过递归发现开放的 Shadow DOM 获得支持。当前版本不抓取字幕、评论、视频画面或完整浏览历史。
+Bilibili/BewlyBewly 适配器源码与 fixture 作为工程底座保留，但当前 Manifest 不在这些站点注入内容脚本，设置页也不提供启用开关。恢复该平台要等 X 完成长时间滚动、误报与视觉稳定性验收。
 
 ## 安装
 
@@ -158,7 +150,7 @@ src/curator.js                系统提示词、JSON Schema、响应解析、单
 src/background.js             API、超时重试、缓存、BYOK、偏好与指标
 src/adapters/index.js         站点适配器注册表与 DOM 辅助函数
 src/adapters/x.js             X 内容提取器
-src/adapters/bilibili.js      Bilibili / BewlyBewly 内容提取器
+src/adapters/bilibili.js      暂停启用的 Bilibili / BewlyBewly 适配器底座
 src/renderer.js               VIP 阅读卡片与唯一 hover sidecar
 src/content.js                视口发现、Shadow DOM、SPA 与运行时状态机
 src/options.*                 BYOK、推广策略与本地数据管理
@@ -196,11 +188,10 @@ npm run test:browser
 - 单飞队列去重与串行执行；
 - 后台 429 重试、schema 兼容回退与活动请求中止；
 - 模型批次缺项拒绝，避免把不完整响应缓存成中性结果；
-- X VIP 渲染；
+- X VIP 渲染与标记前后排版几何不变；
 - 宿主 CSS 动画保留与 DOM 重渲染原位修复；
 - sidecar 避让；
 - 虚拟列表卡片复用；
-- Bilibili/BewlyBewly 开放 Shadow DOM、嵌套卡片去重与普通文章排除；
 - 暂停、模型切换和清除数据时的旧响应隔离。
 
 ## 可复现打包
@@ -222,7 +213,7 @@ dist/dumber-0.3.1-source.zip.sha256
 
 ## 评测
 
-`evaluation/` 包含数据格式、合规要求、合成 seed 和离线评分器。当前仓库没有声称完成 300 条真实 X/Bilibili 样本，也没有声称达到 90% 推广精确率。相关验收必须在真实、审阅过、具有可追溯来源的回归集上完成。
+`evaluation/` 包含数据格式、合规要求、合成 seed 和离线评分器。当前仓库没有声称完成 300 条真实 X 样本，也没有声称达到 90% 推广精确率。相关验收必须在真实、审阅过、具有可追溯来源的回归集上完成。
 
 ## 安全与隐私
 
@@ -230,7 +221,7 @@ dist/dumber-0.3.1-source.zip.sha256
 - 无内置 Key；
 - API 权限按 origin 运行时申请；
 - 不上传完整浏览历史；
-- 不抓取字幕、评论或视频画面；
+- 不抓取 X 私信、页面外内容或完整浏览历史；
 - 导出文件不包含 API Key；
 - 无账户、云同步、遥测或订阅系统。
 

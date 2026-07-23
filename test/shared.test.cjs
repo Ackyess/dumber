@@ -29,6 +29,8 @@ test("ships BYOK defaults without a credential or fixed model", () => {
   assert.equal(DEFAULT_SETTINGS.model, "");
   assert.equal(DEFAULT_SETTINGS.schemaVersion, SETTINGS_SCHEMA_VERSION);
   assert.equal(DEFAULT_SETTINGS.requestTimeoutMs, 28000);
+  assert.equal(DEFAULT_SETTINGS.xEnabled, true);
+  assert.equal(DEFAULT_SETTINGS.bilibiliEnabled, false);
 });
 
 test("drops credentials from the legacy settings schema", () => {
@@ -53,6 +55,7 @@ test("preserves a current-schema local credential and migrates the old timeout",
   assert.equal(settings.apiKey, "local-key");
   assert.equal(settings.model, "curator-model");
   assert.equal(settings.requestTimeoutMs, 28000);
+  assert.equal(settings.bilibiliEnabled, false);
 });
 
 test("normalizes OpenAI-compatible API roots", () => {

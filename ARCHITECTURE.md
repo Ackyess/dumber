@@ -90,6 +90,8 @@ content fingerprint
 
 ## 5. 站点适配器
 
+当前发布版的 Manifest 只加载 X 适配器。Bilibili/BewlyBewly 适配器源码继续保留为未启用的工程底座，不获得站点权限，也不进入运行时脚本列表。
+
 每个适配器返回统一 descriptor：
 
 ```js
@@ -127,7 +129,7 @@ observing → queued → requesting → promoted | ready
 - 内存判定按模型配置签名隔离；
 - 每个运行 generation 只允许一个活跃消息批次；模型切换可启动新 generation，而旧响应只能被丢弃；
 - URL 轮询与 MutationObserver 一起覆盖 SPA 导航；
-- 开放 Shadow DOM 会被递归注册并独立观察。
+- X 私信路径不会激活内容运行时。
 
 ## 7. VIP 渲染器
 
@@ -135,12 +137,12 @@ observing → queued → requesting → promoted | ready
 
 卡片本体：
 
-- 双层 background 形成阅读平面和虹彩边缘；
+- 已定位卡片使用绝对定位伪元素形成虹彩边缘；静态卡片使用不占空间的 outline 色相动画，均不增加 border、不改变定位上下文或盒模型；
 - 不在正文上方放置半透明覆盖层；
 - 虹彩使用独立 Web Animations 动画更新自定义属性，不覆盖宿主 CSS `animation`；
-- 主要元素提升字号、行距和对比度；
+- 主要元素只提升颜色对比度，不改字号、字重、行距、换行或文字尺寸；
 - 次要元素仅降低视觉权重；
-- 截断元素取消 line clamp；
+- 不主动取消宿主的 line clamp 或截断，避免异步标记触发布局重排；
 - reduced-motion 停止角度动画。
 
 sidecar：
@@ -168,9 +170,9 @@ sidecar：
 
 - 完整页面 HTML；
 - 完整浏览历史；
-- 字幕、评论和视频帧；
+- X 私信、页面外内容和完整页面 HTML；
 - 云端用户账号。
 
 ## 9. 扩展点
 
-新增平台只能通过新适配器完成，不得把平台 selector 重新塞回 `content.js`。适配器规范见 `docs/ADAPTERS.md`。
+恢复或新增平台只能通过站点适配器与独立验收完成，不得把平台 selector 重新塞回 `content.js`。适配器规范见 `docs/ADAPTERS.md`。

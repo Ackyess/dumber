@@ -11,7 +11,7 @@
   const STYLE_TEXT = String.raw`
     @property --dumber-angle {
       syntax: "<angle>";
-      inherits: false;
+      inherits: true;
       initial-value: 0deg;
     }
 
@@ -19,14 +19,24 @@
       --dumber-angle: 0deg;
       --dumber-surface: rgba(250, 250, 253, .985);
       --dumber-ink: #11131a;
-      --dumber-muted: #5d6270;
       --dumber-radius: 16px;
-      box-sizing: border-box !important;
-      border: 2px solid transparent !important;
       border-radius: var(--dumber-radius) !important;
-      background:
-        linear-gradient(var(--dumber-surface), var(--dumber-surface)) padding-box,
-        conic-gradient(
+      background-color: var(--dumber-surface) !important;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, .34),
+        0 0 26px rgba(156, 113, 255, .22),
+        0 18px 48px rgba(18, 14, 36, .12) !important;
+    }
+
+    .dumber-vip.dumber-ring-contained::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      box-sizing: border-box;
+      padding: 2px;
+      border-radius: inherit;
+      background: conic-gradient(
           from var(--dumber-angle),
           #8fffd8,
           #80c8ff,
@@ -34,11 +44,18 @@
           #ff87bb,
           #ffe06f,
           #8fffd8
-        ) border-box !important;
-      box-shadow:
-        0 0 0 1px rgba(255, 255, 255, .34),
-        0 0 26px rgba(156, 113, 255, .22),
-        0 18px 48px rgba(18, 14, 36, .12) !important;
+        );
+      pointer-events: none;
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .dumber-vip.dumber-ring-outline {
+      outline: 2px solid #b98cff !important;
+      outline-offset: -2px !important;
     }
 
     .dumber-vip:hover,
@@ -52,45 +69,12 @@
     .dumber-vip.dumber-primary,
     .dumber-vip .dumber-primary {
       color: var(--dumber-ink) !important;
-      font-size: 1.075em !important;
-      font-weight: 600 !important;
-      line-height: 1.58 !important;
-      letter-spacing: .002em !important;
-      text-wrap: pretty;
-    }
-
-    .dumber-vip.dumber-primary :is(a, span, div, p, strong, em),
-    .dumber-vip .dumber-primary :is(a, span, div, p, strong, em) {
-      color: inherit !important;
-      line-height: inherit !important;
     }
 
     .dumber-vip.dumber-secondary,
     .dumber-vip .dumber-secondary {
       opacity: .66 !important;
       filter: saturate(.78) !important;
-      transition: opacity 120ms ease !important;
-    }
-
-    .dumber-vip.dumber-secondary:hover,
-    .dumber-vip.dumber-secondary:focus,
-    .dumber-vip.dumber-secondary:focus-within,
-    .dumber-vip .dumber-secondary:hover,
-    .dumber-vip .dumber-secondary:focus,
-    .dumber-vip .dumber-secondary:focus-within {
-      opacity: .92 !important;
-    }
-
-    .dumber-vip.dumber-expanded,
-    .dumber-vip .dumber-expanded {
-      display: block !important;
-      max-height: none !important;
-      overflow: visible !important;
-      white-space: normal !important;
-      text-overflow: clip !important;
-      -webkit-box-orient: initial !important;
-      -webkit-line-clamp: unset !important;
-      line-clamp: unset !important;
     }
 
     .dumber-sidecar {
@@ -315,26 +299,26 @@
       const primaryElements = uniqueConnected(candidate.primaryElements, card);
       const secondaryElements = uniqueConnected(candidate.secondaryElements, card)
         .filter((element) => !primaryElements.includes(element));
-      const expandableElements = uniqueConnected(candidate.expandableElements, card);
       const previous = records.get(card);
 
       reconcileClass(previous?.primaryElements, primaryElements, "dumber-primary");
       reconcileClass(previous?.secondaryElements, secondaryElements, "dumber-secondary");
-      reconcileClass(previous?.expandableElements, expandableElements, "dumber-expanded");
+      reconcileClass(previous?.expandableElements, [], "dumber-expanded");
 
       card.classList.add("dumber-vip");
+      card.classList.toggle("dumber-ring-contained", computed?.position !== "static");
+      card.classList.toggle("dumber-ring-outline", computed?.position === "static");
       card.dataset.dumberPromotion = "true";
       card.dataset.dumberPromotionLabel = curation.promotionLabel || Shared.DRIVER_LABELS[curation.primaryDriver];
       card.style.setProperty("--dumber-surface", dark ? "rgba(17, 18, 24, .985)" : "rgba(250, 250, 253, .985)");
       card.style.setProperty("--dumber-ink", dark ? "#f7f8fb" : "#11131a");
-      card.style.setProperty("--dumber-muted", dark ? "#b8bdc9" : "#5d6270");
       card.style.setProperty("--dumber-radius", computed?.borderRadius && computed.borderRadius !== "0px" ? computed.borderRadius : "16px");
 
       const payload = { candidate, curation, decision };
       const record = {
         primaryElements,
         secondaryElements,
-        expandableElements,
+        expandableElements: [],
         payload,
         spectrumAnimation: previous?.spectrumAnimation || null
       };
@@ -347,13 +331,14 @@
     function unmark(card, options = {}) {
       const record = records.get(card);
       card?.classList?.remove("dumber-vip");
+      card?.classList?.remove("dumber-ring-contained");
+      card?.classList?.remove("dumber-ring-outline");
       if (card?.dataset) {
         delete card.dataset.dumberPromotion;
         delete card.dataset.dumberPromotionLabel;
       }
       card?.style?.removeProperty("--dumber-surface");
       card?.style?.removeProperty("--dumber-ink");
-      card?.style?.removeProperty("--dumber-muted");
       card?.style?.removeProperty("--dumber-radius");
       card?.style?.removeProperty("--dumber-angle");
       for (const element of record?.primaryElements || []) element.classList?.remove("dumber-primary");
@@ -377,10 +362,20 @@
       if (record.spectrumAnimation && record.spectrumAnimation.playState !== "idle") return;
       record.spectrumAnimation?.cancel?.();
       try {
-        record.spectrumAnimation = card.animate([
-          { "--dumber-angle": "0deg" },
-          { "--dumber-angle": "360deg" }
-        ], {
+        const frames = card.classList.contains("dumber-ring-outline")
+          ? [
+              { outlineColor: "#8fffd8" },
+              { outlineColor: "#80c8ff" },
+              { outlineColor: "#b98cff" },
+              { outlineColor: "#ff87bb" },
+              { outlineColor: "#ffe06f" },
+              { outlineColor: "#8fffd8" }
+            ]
+          : [
+              { "--dumber-angle": "0deg" },
+              { "--dumber-angle": "360deg" }
+            ];
+        record.spectrumAnimation = card.animate(frames, {
           duration: 14000,
           easing: "linear",
           iterations: Infinity

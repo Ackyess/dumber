@@ -96,7 +96,8 @@
   function isEnabled() {
     return settings.enabled
       && Boolean(settings.apiKey && settings.model)
-      && (platform === "x" ? settings.xEnabled : settings.bilibiliEnabled);
+      && platform === "x"
+      && settings.xEnabled;
   }
 
   function start() {

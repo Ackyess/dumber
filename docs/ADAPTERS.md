@@ -72,7 +72,7 @@ context 只应包含模型判定所需的可见语义，不得包含：
 
 `secondaryElements`：时间、播放量、点赞、弹幕、弱操作按钮等。渲染器只降低视觉权重，不删除功能。
 
-`expandableElements`：可能使用 line clamp、ellipsis、max-height 的正文与标题。
+`expandableElements`：保留给未来平台渲染策略的正文与标题分组。当前 X 渲染器不会取消 line clamp、ellipsis 或 max-height，避免异步标记改变布局。
 
 ## Shadow DOM
 

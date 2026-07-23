@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Headless Chromium smoke test for DUMBER's content runtime.
+"""Headless Chromium smoke test for DUMBER's X content runtime.
 
 The test uses in-memory pages so it can run in locked-down environments that block
 localhost and file:// navigation. The actual extension scripts are injected from disk.
@@ -17,7 +17,6 @@ SCRIPTS = [
     ROOT / "src" / "shared.js",
     ROOT / "src" / "adapters" / "index.js",
     ROOT / "src" / "adapters" / "x.js",
-    ROOT / "src" / "adapters" / "bilibili.js",
     ROOT / "src" / "renderer.js",
     ROOT / "src" / "content.js",
 ]
@@ -86,7 +85,7 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
             model: configured ? "fixture-model" : "",
             promotionThreshold: .72,
             xEnabled: true,
-            bilibiliEnabled: true,
+            bilibiliEnabled: false,
             personalizationEnabled: true,
             requestTimeoutMs: 12000
           };
@@ -99,8 +98,8 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
               promote: true,
               dopamineScore: .93,
               durableValue: .18,
-              primaryDriver: platform === "x" ? "identity_resonance" : "curiosity_gap",
-              promotionLabel: platform === "x" ? "高共鸣" : "强好奇驱动",
+              primaryDriver: "identity_resonance",
+              promotionLabel: "高共鸣",
               cacheHit: false,
               ...overrides
             }))
@@ -203,15 +202,44 @@ def run() -> None:
         page.wait_for_timeout(120)
         assert page.evaluate("window.__dumberTest.curateCalls") == 0
         assert page.locator("[data-dumber-state]").count() == 0
+        page.locator("article").evaluate("element => { element.style.position = 'static'; }")
+        layout_probe = """
+          element => {
+            const text = element.querySelector('[data-testid="tweetText"]');
+            const cardRect = element.getBoundingClientRect();
+            const textRect = text.getBoundingClientRect();
+            const style = getComputedStyle(text);
+            return {
+              cardWidth: cardRect.width,
+              cardHeight: cardRect.height,
+              textWidth: textRect.width,
+              textHeight: textRect.height,
+              fontSize: style.fontSize,
+              fontWeight: style.fontWeight,
+              lineHeight: style.lineHeight,
+              letterSpacing: style.letterSpacing,
+              position: getComputedStyle(element).position
+            };
+          }
+        """
+        layout_before = page.locator("article").evaluate(layout_probe)
         page.evaluate(
             "window.__dumberTest.updateSettings({ apiKey: 'fixture-key', model: 'fixture-model' })"
         )
         page.locator("article.dumber-vip").wait_for(state="visible")
+        layout_after = page.locator("article").evaluate(layout_probe)
+        assert layout_after == layout_before
+        assert page.locator("article.dumber-ring-outline").count() == 1
+        assert page.locator(".dumber-expanded").count() == 0
         assert page.evaluate("window.__dumberTest.curateCalls") == 1
         page.close()
 
         page = create_fixture_page(browser, "x")
         page.locator("article.dumber-vip").wait_for(state="visible")
+        assert page.locator("article.dumber-ring-contained").count() == 1
+        assert page.locator("article").evaluate(
+            "element => getComputedStyle(element, '::before').content"
+        ) != "none"
         assert "fixture-host-pulse" in page.locator("article").evaluate(
             "element => getComputedStyle(element).animationName"
         )
@@ -292,14 +320,6 @@ def run() -> None:
         page.locator('.dumber-sidecar button[data-action="less"]').click()
         page.wait_for_function("!document.querySelector('article').classList.contains('dumber-vip')")
         assert page.evaluate("window.__dumberTest.preferences") == ["less"]
-        page.close()
-
-        page = create_fixture_page(browser, "bilibili")
-        page.locator(".bili-video-card.dumber-vip").wait_for(state="visible")
-        assert page.locator(".bili-video-card .dumber-expanded").count() >= 1
-        assert page.locator(".feed-card.dumber-vip").count() == 0
-        assert page.locator("#unrelated-article.dumber-vip").count() == 0
-        assert page.locator(".dumber-sidecar").count() == 1
         page.close()
 
         browser.close()

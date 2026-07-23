@@ -54,15 +54,11 @@ function checkManifest() {
 
   const expectedContentHosts = new Set([
     "https://x.com/*",
-    "https://twitter.com/*",
-    "https://www.bilibili.com/*",
-    "https://t.bilibili.com/*",
-    "https://search.bilibili.com/*",
-    "https://space.bilibili.com/*"
+    "https://twitter.com/*"
   ]);
   const actualContentHosts = new Set((manifest.content_scripts || []).flatMap((entry) => entry.matches || []));
   if (!sameStringSet(actualContentHosts, expectedContentHosts)) {
-    failures.push("content script hosts must remain limited to X and Bilibili");
+    failures.push("content script hosts must remain limited to X");
   }
 
   const worker = manifest.background?.service_worker;

@@ -110,8 +110,8 @@ function readJsonLines(path, validator) {
 function validateGoldCase(value, location) {
   requireObject(value, location);
   requireId(value.id, location);
-  if (value.platform !== "x" && value.platform !== "bilibili") {
-    throw new Error(`${location}: platform must be x or bilibili`);
+  if (value.platform !== "x") {
+    throw new Error(`${location}: platform must be x`);
   }
   if (!value.context || typeof value.context !== "object" || Array.isArray(value.context)) {
     throw new Error(`${location}: context must be an object`);

@@ -9,7 +9,6 @@
   const threshold = document.querySelector("#promotion-threshold");
   const thresholdOutput = document.querySelector("#threshold-output");
   const xEnabled = document.querySelector("#x-enabled");
-  const bilibiliEnabled = document.querySelector("#bilibili-enabled");
   const personalizationEnabled = document.querySelector("#personalization-enabled");
   const testButton = document.querySelector("#test-button");
   const toggleKeyButton = document.querySelector("#toggle-key");
@@ -54,7 +53,6 @@
     model.value = settings.model;
     threshold.value = settings.promotionThreshold;
     xEnabled.checked = settings.xEnabled;
-    bilibiliEnabled.checked = settings.bilibiliEnabled;
     personalizationEnabled.checked = settings.personalizationEnabled;
     updateThreshold();
     await refreshDashboard();
@@ -69,7 +67,7 @@
       model: model.value,
       promotionThreshold: threshold.value,
       xEnabled: xEnabled.checked,
-      bilibiliEnabled: bilibiliEnabled.checked,
+      bilibiliEnabled: false,
       personalizationEnabled: personalizationEnabled.checked,
       requestTimeoutMs
     };

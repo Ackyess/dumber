@@ -8,7 +8,7 @@
     :root { color-scheme: light; font-family: system-ui, sans-serif; }
     body { margin: 0; min-height: 1800px; background: #f2f3f6; color: #111; }
     main { width: 620px; margin: 42px auto; }
-    article, .bili-video-card {
+    article {
       position: relative;
       display: block;
       margin: 0 0 28px;
@@ -17,18 +17,10 @@
       border: 1px solid #ddd;
       border-radius: 16px;
     }
-    [data-testid="tweetText"], .bili-video-card__info--tit { font-size: 16px; line-height: 1.35; }
-    .bili-video-card__info--tit {
-      display: -webkit-box;
-      overflow: hidden;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 1;
-    }
-    .bili-video-card__stats { margin-top: 10px; color: #777; }
+    [data-testid="tweetText"] { font-size: 16px; line-height: 1.35; }
   </style>
   <script>
-    const params = new URLSearchParams(location.search);
-    const platform = params.get("platform") === "bilibili" ? "bilibili" : "x";
+    const platform = "x";
     document.documentElement.dataset.dumberPlatform = platform;
 
     const settings = {
@@ -39,7 +31,7 @@
       model: "fixture-model",
       promotionThreshold: .72,
       xEnabled: true,
-      bilibiliEnabled: true,
+      bilibiliEnabled: false,
       personalizationEnabled: true,
       requestTimeoutMs: 12000
     };
@@ -59,8 +51,8 @@
                 promote: true,
                 dopamineScore: .93,
                 durableValue: .18,
-                primaryDriver: platform === "x" ? "identity_resonance" : "curiosity_gap",
-                promotionLabel: platform === "x" ? "高共鸣" : "强好奇驱动",
+                primaryDriver: "identity_resonance",
+                promotionLabel: "高共鸣",
                 cacheHit: false
               }))
             };
@@ -99,35 +91,18 @@
 
   <script>
     const fixture = document.querySelector("#fixture");
-    if (platform === "x") {
-      fixture.innerHTML = `
-        <article data-testid="tweet">
-          <div data-testid="User-Name"><a href="/curator">Curator @curator</a></div>
-          <div data-testid="tweetText">所有人都在讨论的惊人结论：你绝对想不到最后发生了什么。</div>
-          <a href="/curator/status/100"><time>刚刚</time></a>
-          <button data-testid="like">999</button>
-        </article>
-      `;
-    } else {
-      const host = document.createElement("div");
-      host.id = "bewly-host";
-      fixture.append(host);
-      const shadow = host.attachShadow({ mode: "open" });
-      shadow.innerHTML = `
-        <section class="bili-video-card">
-          <a href="https://www.bilibili.com/video/BV1DUMBER123">
-            <h3 class="bili-video-card__info--tit" title="这个标题完整展开以后会展示一个非常强烈的好奇缺口">这个标题完整展开以后会展示一个非常强烈的好奇缺口</h3>
-          </a>
-          <span class="bili-video-card__info--author">测试 UP 主</span>
-          <div class="bili-video-card__stats">999万播放 · 88万弹幕</div>
-        </section>
-      `;
-    }
+    fixture.innerHTML = `
+      <article data-testid="tweet">
+        <div data-testid="User-Name"><a href="/curator">Curator @curator</a></div>
+        <div data-testid="tweetText">所有人都在讨论的惊人结论：你绝对想不到最后发生了什么。</div>
+        <a href="/curator/status/100"><time>刚刚</time></a>
+        <button data-testid="like">999</button>
+      </article>
+    `;
   </script>
   <script src="../src/shared.js"></script>
   <script src="../src/adapters/index.js"></script>
   <script src="../src/adapters/x.js"></script>
-  <script src="../src/adapters/bilibili.js"></script>
   <script src="../src/renderer.js"></script>
   <script src="../src/content.js"></script>
 </body>

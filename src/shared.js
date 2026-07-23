@@ -43,7 +43,7 @@
     model: "",
     promotionThreshold: 0.72,
     xEnabled: true,
-    bilibiliEnabled: true,
+    bilibiliEnabled: false,
     personalizationEnabled: true,
     requestTimeoutMs: 28000
   });
@@ -182,7 +182,8 @@
         0.95
       ),
       xEnabled: source.xEnabled !== false,
-      bilibiliEnabled: source.bilibiliEnabled !== false,
+      // Bilibili is deliberately parked while the X experience is hardened.
+      bilibiliEnabled: false,
       personalizationEnabled: source.personalizationEnabled !== false,
       requestTimeoutMs: Math.round(clamp(
         requestTimeoutMs === 12000 ? DEFAULT_SETTINGS.requestTimeoutMs : requestTimeoutMs,
