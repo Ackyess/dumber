@@ -27,6 +27,12 @@ test("builds the new curation schema", () => {
   assert.equal(payload.messages[1].content.includes("item-1"), true);
 });
 
+test("uses low reasoning only for grok-4.5", () => {
+  const item = [{ id: "item-1", context: { text: "测试" } }];
+  assert.equal(Curator.createRequestPayload({ model: "grok-4.5" }, item).reasoning_effort, "low");
+  assert.equal(Curator.createRequestPayload(settings, item).reasoning_effort, undefined);
+});
+
 test("parses structured model output", () => {
   const body = {
     choices: [{
