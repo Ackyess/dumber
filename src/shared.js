@@ -43,7 +43,7 @@
     xEnabled: true,
     bilibiliEnabled: true,
     personalizationEnabled: true,
-    requestTimeoutMs: 12000
+    requestTimeoutMs: 28000
   });
 
   const DEFAULT_PROFILE = Object.freeze({
@@ -165,6 +165,7 @@
     }
 
     const legacyThreshold = source.promotionThreshold ?? source.threshold;
+    const requestTimeoutMs = finiteNumber(source.requestTimeoutMs, DEFAULT_SETTINGS.requestTimeoutMs);
     return {
       schemaVersion: SETTINGS_SCHEMA_VERSION,
       enabled: source.enabled !== false,
@@ -181,9 +182,9 @@
       bilibiliEnabled: source.bilibiliEnabled !== false,
       personalizationEnabled: source.personalizationEnabled !== false,
       requestTimeoutMs: Math.round(clamp(
-        finiteNumber(source.requestTimeoutMs, DEFAULT_SETTINGS.requestTimeoutMs),
+        requestTimeoutMs === 12000 ? DEFAULT_SETTINGS.requestTimeoutMs : requestTimeoutMs,
         4000,
-        30000
+        28000
       ))
     };
   }
