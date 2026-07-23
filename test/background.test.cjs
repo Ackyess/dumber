@@ -123,6 +123,19 @@ function successResponseForRequest(init, overrides = {}) {
   }), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
+async function streamingSuccessResponseForRequest(init) {
+  const body = await successResponseForRequest(init).json();
+  const content = body.choices[0].message.content;
+  const middle = Math.ceil(content.length / 2);
+  const events = [content.slice(0, middle), content.slice(middle)]
+    .map((part) => `data: ${JSON.stringify({ choices: [{ delta: { content: part } }] })}\n\n`)
+    .join("");
+  return new Response(`${events}data: [DONE]\n\n`, {
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" }
+  });
+}
+
 function curationMessage(id = "client-1", hash = "content-hash") {
   return {
     type: "curate",
@@ -153,12 +166,21 @@ test("background performs structured curation and serves the next request from c
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "https://api.example.test/v1/chat/completions");
   assert.equal(calls[0].payload.response_format.type, "json_schema");
+  assert.equal(calls[0].payload.stream, true);
 
   const dashboard = await harness.send({ type: "getDashboard" });
   assert.equal(dashboard.ok, true);
   assert.equal(dashboard.cache.entries, 1);
   assert.equal(dashboard.metrics.cacheHits, 1);
   assert.deepEqual(dashboard.queue, { pending: 0, active: 0, running: false });
+});
+
+test("background reconstructs OpenAI-compatible streaming responses", async () => {
+  const harness = createHarness(async (_url, init) => streamingSuccessResponseForRequest(init));
+  const response = await harness.send(curationMessage());
+
+  assert.equal(response.ok, true, JSON.stringify(response));
+  assert.equal(response.curations[0].promotionLabel, "强好奇驱动");
 });
 
 test("dashboard distinguishes saved credentials from a revoked endpoint permission", async () => {

@@ -113,7 +113,7 @@ UI 只消费正向 `promotionLabel`。共享层会过滤未知 ID、越界分数
 - 每批最多 8 条；
 - 相同缓存键在等待中或执行中都会合并为同一个请求；
 - API 批次严格串行，避免并发请求风暴；
-- 默认超时 28 秒，为 Chrome service worker 的 30 秒 `fetch` 上限保留余量；
+- 默认使用流式响应，28 秒只限制模型开始响应的时间，为 Chrome service worker 的 30 秒 `fetch` 上限保留余量；
 - 429 与 5xx 最多重试一次；
 - 每次调用前确认当前 API origin 权限仍然存在；
 - 仅在服务明确不支持 JSON Schema 时回退到 `json_object`；

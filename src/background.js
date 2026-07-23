@@ -330,10 +330,14 @@ async function fetchWithRetry(settings, payload, generation) {
         cache: "no-store",
         credentials: "omit"
       });
+      clearTimeout(timeout);
+      if (response.ok && response.headers.get("Content-Type")?.toLowerCase().includes("text/event-stream")) {
+        response = await collapseEventStream(response);
+      }
     } catch (error) {
       if (generation !== dataGeneration) throw createCancellationError();
       if (error?.name === "AbortError") {
-        throw new Error(`模型请求超时（${Math.round(settings.requestTimeoutMs / 1000)} 秒）。`);
+        throw new Error(`模型在 ${Math.round(settings.requestTimeoutMs / 1000)} 秒内未开始响应。`);
       }
       throw new Error(`无法连接模型 API：${error?.message || "网络错误"}`);
     } finally {
@@ -356,6 +360,34 @@ async function fetchWithRetry(settings, payload, generation) {
     return response;
   }
   throw new Error("模型请求未返回结果。");
+}
+
+async function collapseEventStream(response) {
+  const parts = [];
+  const rawBody = await response.text();
+  for (const line of rawBody.split(/\r?\n/)) {
+    if (!line.startsWith("data:")) continue;
+    const data = line.slice(5).trim();
+    if (!data || data === "[DONE]") continue;
+    let chunk;
+    try {
+      chunk = JSON.parse(data);
+    } catch {
+      throw new Error("模型返回了无法解析的流式数据。");
+    }
+    if (chunk?.error) throw new Error(Curator.responseErrorMessage(chunk, response.status));
+    const content = chunk?.choices?.[0]?.delta?.content
+      ?? chunk?.choices?.[0]?.message?.content;
+    if (typeof content === "string") parts.push(content);
+  }
+  if (!parts.length) throw new Error("模型流未返回内容。");
+  return new Response(JSON.stringify({
+    choices: [{ message: { content: parts.join("") } }]
+  }), {
+    status: response.status,
+    statusText: response.statusText,
+    headers: { "Content-Type": "application/json" }
+  });
 }
 
 function retryDelay(value) {
