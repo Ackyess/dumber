@@ -35,7 +35,7 @@
 
           <label class="field">
             <span>模型</span>
-            <input id="model" type="text" spellcheck="false" placeholder="填写可用模型名称" required>
+            <input id="model" type="text" spellcheck="false" placeholder="1 秒 SLA 建议使用非推理模型" required>
           </label>
 
           <label class="field">
@@ -49,7 +49,7 @@
 
         <div class="connection-row">
           <button id="test-button" class="button secondary" type="button">测试模型连接</button>
-          <p class="privacy-note">从 v0.1 升级时，旧开发凭据会被主动清除，需要重新配置。</p>
+          <p class="privacy-note">测试会执行一次冷请求；超过 1 秒会直接判定为不满足运行 SLA。</p>
         </div>
       </section>
 
@@ -58,7 +58,7 @@
           <span class="index">02</span>
           <div>
             <h2>推广策略</h2>
-            <p>模型负责挑选，阅读渲染器负责放大、展开和提升可读性。</p>
+            <p>模型负责挑选，阅读渲染器负责提升视觉优先级与对比度。</p>
           </div>
         </div>
 

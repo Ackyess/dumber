@@ -41,10 +41,13 @@ function createStorageArea(initial = {}) {
   };
 }
 
-function createHarness(fetchImpl, { permissionGranted = true } = {}) {
+function createHarness(fetchImpl, {
+  permissionGranted = true,
+  apiBaseUrl = "https://api.example.test/v1"
+} = {}) {
   const settings = Shared.sanitizeSettings({
     schemaVersion: Shared.SETTINGS_SCHEMA_VERSION,
-    apiBaseUrl: "https://api.example.test/v1",
+    apiBaseUrl,
     apiKey: "fixture-key",
     model: "fixture-model",
     requestTimeoutMs: 4000
@@ -115,7 +118,6 @@ function successResponseForRequest(init, overrides = {}) {
     dopamineScore: 0.91,
     durableValue: 0.17,
     primaryDriver: "curiosity_gap",
-    promotionLabel: "强好奇驱动",
     ...overrides
   }));
   return new Response(JSON.stringify({
@@ -166,13 +168,37 @@ test("background performs structured curation and serves the next request from c
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "https://api.example.test/v1/chat/completions");
   assert.equal(calls[0].payload.response_format.type, "json_schema");
-  assert.equal(calls[0].payload.stream, true);
+  assert.equal(calls[0].payload.stream, false);
 
   const dashboard = await harness.send({ type: "getDashboard" });
   assert.equal(dashboard.ok, true);
   assert.equal(dashboard.cache.entries, 1);
   assert.equal(dashboard.metrics.cacheHits, 1);
   assert.deepEqual(dashboard.queue, { pending: 0, active: 0, running: false });
+});
+
+test("background keeps non-model overhead inside the one-second budget", async () => {
+  const harness = createHarness(async (_url, init) => {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    return successResponseForRequest(init);
+  });
+  const startedAt = performance.now();
+  const response = await harness.send(curationMessage("latency-client", "latency-hash"));
+
+  assert.equal(response.ok, true, JSON.stringify(response));
+  assert.ok(performance.now() - startedAt < 1000);
+});
+
+test("official xAI requests carry a stable prompt-cache routing key", async () => {
+  let headers;
+  const harness = createHarness(async (_url, init) => {
+    headers = init.headers;
+    return successResponseForRequest(init);
+  }, { apiBaseUrl: "https://api.x.ai/v1" });
+  const response = await harness.send(curationMessage());
+
+  assert.equal(response.ok, true, JSON.stringify(response));
+  assert.match(headers["x-grok-conv-id"], /^dumber-[0-9a-f]{16}$/);
 });
 
 test("background reconstructs OpenAI-compatible streaming responses", async () => {

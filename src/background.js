@@ -8,6 +8,7 @@ const CACHE_LIMIT = 1200;
 const CACHE_TTL_MS = 45 * 24 * 60 * 60 * 1000;
 
 let cachePromise = null;
+let settingsPromise = null;
 let metricsPromise = null;
 let cacheWriteChain = Promise.resolve();
 let metricsMutationChain = Promise.resolve();
@@ -19,7 +20,7 @@ const activeControllers = new Set();
 
 const batcher = Curator.createSingleFlightBatcher({
   maxBatchSize: 8,
-  delayMs: 45,
+  delayMs: 0,
   worker: processQueuedBatch
 });
 
@@ -30,6 +31,14 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onStartup?.addListener(() => {
   void migrateInstallation();
 });
+
+chrome.storage.onChanged?.addListener((changes, area) => {
+  if (area !== "local" || !changes[Shared.SETTINGS_KEY]) return;
+  settingsPromise = Promise.resolve(Shared.sanitizeSettings(changes[Shared.SETTINGS_KEY].newValue));
+});
+
+void getSettings().catch(() => undefined);
+void ensureCache().catch(() => undefined);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const supported = new Set([
@@ -92,18 +101,29 @@ async function migrateInstallation() {
     [Shared.PROFILE_KEY]: profile,
     [Shared.METRICS_KEY]: metrics
   });
+  settingsPromise = Promise.resolve(settings);
   if (Shared.LEGACY_CACHE_KEYS.some((key) => stored[key] !== undefined)) {
     await chrome.storage.local.remove(Shared.LEGACY_CACHE_KEYS);
   }
 }
 
 async function getSettings() {
-  const stored = await chrome.storage.local.get(Shared.SETTINGS_KEY);
-  const settings = Shared.sanitizeSettings(stored[Shared.SETTINGS_KEY]);
-  if (stored[Shared.SETTINGS_KEY]?.schemaVersion !== Shared.SETTINGS_SCHEMA_VERSION) {
-    await chrome.storage.local.set({ [Shared.SETTINGS_KEY]: settings });
+  if (!settingsPromise) {
+    const loading = (async () => {
+      const stored = await chrome.storage.local.get(Shared.SETTINGS_KEY);
+      const settings = Shared.sanitizeSettings(stored[Shared.SETTINGS_KEY]);
+      if (stored[Shared.SETTINGS_KEY]?.schemaVersion !== Shared.SETTINGS_SCHEMA_VERSION) {
+        await chrome.storage.local.set({ [Shared.SETTINGS_KEY]: settings });
+      }
+      return settings;
+    })();
+    const guarded = loading.catch((error) => {
+      if (settingsPromise === guarded) settingsPromise = null;
+      throw error;
+    });
+    settingsPromise = guarded;
   }
-  return settings;
+  return settingsPromise;
 }
 
 async function curateItems(rawItems, extractorVersionValue) {
@@ -147,10 +167,10 @@ async function curateItems(rawItems, extractorVersionValue) {
     }
   }
 
-  await mutateMetrics((metrics) => {
+  void mutateMetrics((metrics) => {
     metrics.analyzed += items.length;
     metrics.cacheHits += cacheHits;
-  }, generation);
+  }, generation).catch(() => undefined);
 
   const groupKey = requestGroupKey(settings, extractorVersion);
   const fresh = await Promise.all(missing.map(async ({ item, key }) => {
@@ -192,6 +212,7 @@ async function testConnection() {
     }
   };
   const key = `test:${Date.now()}:${Shared.hashText(settings.model)}`;
+  const startedAt = performance.now();
   const curation = await batcher.enqueue(key, {
     settings,
     extractorVersion: Shared.EXTRACTOR_VERSION,
@@ -200,7 +221,10 @@ async function testConnection() {
     generation
   }, requestGroupKey(settings, Shared.EXTRACTOR_VERSION));
   assertGeneration(generation);
-  return { curation: { ...curation, id: item.id } };
+  return {
+    curation: { ...curation, id: item.id },
+    latencyMs: Math.max(0, Math.round(performance.now() - startedAt))
+  };
 }
 
 async function processQueuedBatch(entries) {
@@ -215,9 +239,9 @@ async function processQueuedBatch(entries) {
   }));
   const startedAt = performance.now();
 
-  await mutateMetrics((metrics) => {
+  void mutateMetrics((metrics) => {
     metrics.apiItems += entries.length;
-  }, generation);
+  }, generation).catch(() => undefined);
 
   try {
     const curations = await requestCurations(settings, apiItems, generation);
@@ -245,18 +269,18 @@ async function processQueuedBatch(entries) {
 
     trimCache(cache);
     await persistCache(cache, generation);
-    await mutateMetrics((metrics) => {
+    void mutateMetrics((metrics) => {
       metrics.apiLatencies.push(Math.max(0, Math.round(performance.now() - startedAt)));
       metrics.apiLatencies = metrics.apiLatencies.slice(-120);
-    }, generation);
+    }, generation).catch(() => undefined);
     return output;
   } catch (error) {
     if (!isCancellation(error) && generation === dataGeneration) {
-      await mutateMetrics((metrics) => {
+      void mutateMetrics((metrics) => {
         metrics.requestFailures += 1;
         metrics.apiLatencies.push(Math.max(0, Math.round(performance.now() - startedAt)));
         metrics.apiLatencies = metrics.apiLatencies.slice(-120);
-      }, generation);
+      }, generation).catch(() => undefined);
     }
     throw error;
   }
@@ -316,15 +340,19 @@ async function fetchWithRetry(settings, payload, generation) {
     activeControllers.add(controller);
     let response;
     try {
-      await mutateMetrics((metrics) => {
+      void mutateMetrics((metrics) => {
         metrics.apiRequests += 1;
-      }, generation);
+      }, generation).catch(() => undefined);
+      const headers = {
+        "Authorization": `Bearer ${settings.apiKey}`,
+        "Content-Type": "application/json"
+      };
+      if (new URL(endpoint).hostname === "api.x.ai") {
+        headers["x-grok-conv-id"] = `dumber-${Shared.hashText(`${settings.model}:${Shared.PROMPT_VERSION}`)}`;
+      }
       response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${settings.apiKey}`,
-          "Content-Type": "application/json"
-        },
+        headers,
         body: JSON.stringify(payload),
         signal: controller.signal,
         cache: "no-store",
@@ -339,9 +367,9 @@ async function fetchWithRetry(settings, payload, generation) {
         await response.arrayBuffer();
         clearTimeout(timeout);
         timeout = 0;
-        await mutateMetrics((metrics) => {
+        void mutateMetrics((metrics) => {
           metrics.retries += 1;
-        }, generation);
+        }, generation).catch(() => undefined);
         await delay(retryDelay(response.headers.get("Retry-After")));
         assertGeneration(generation);
         continue;

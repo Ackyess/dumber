@@ -50,9 +50,17 @@
     }
     scheduleFlush();
   }, {
-    rootMargin: "360px 0px",
+    rootMargin: "2400px 0px",
     threshold: 0.02
   });
+
+  const visibilityObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const candidate = cardRecords.get(entry.target)?.candidate;
+      if (candidate && !candidate.visibleAt) candidate.visibleAt = performance.now();
+    }
+  }, { threshold: 0.02 });
 
   void initialize();
 
@@ -126,6 +134,7 @@
     pending.clear();
     dirtyRoots.clear();
     intersection.disconnect();
+    visibilityObserver.disconnect();
 
     for (const observer of rootObservers.values()) observer.disconnect();
     rootObservers.clear();
@@ -182,7 +191,7 @@
       for (const rootNode of targets) scanRoot(rootNode);
       pruneDisconnectedCards();
       pruneDisconnectedRoots();
-    }, immediate ? 0 : 36);
+    }, immediate ? 0 : 16);
   }
 
   function scanRoot(rootNode) {
@@ -212,6 +221,7 @@
       id,
       hash: fingerprint,
       queuedAt: performance.now(),
+      visibleAt: isInViewport(card) ? performance.now() : 0,
       preferenceContext: Shared.sanitizePreferenceContext({
         ...descriptor.preferenceContext,
         platform,
@@ -222,6 +232,7 @@
     const existing = cardRecords.get(card);
     if (existing?.candidate?.fingerprint === fingerprint) {
       candidate.queuedAt = existing.candidate.queuedAt;
+      candidate.visibleAt = existing.candidate.visibleAt || candidate.visibleAt;
       const previousCandidate = existing.candidate;
       existing.candidate = candidate;
       if (existing.state === "promoted") {
@@ -237,6 +248,7 @@
       && sameStableIdentity(existing.candidate, candidate);
     if (existing) {
       intersection.unobserve(card);
+      visibilityObserver.unobserve(card);
       removeCandidateFromPending(existing.candidate);
       if (!keepPriorPromotion) renderer.unmark(card);
     }
@@ -251,6 +263,7 @@
       requestEpoch: -1,
       retryCount: 0
     });
+    if (!candidate.visibleAt) visibilityObserver.observe(card);
 
     const remembered = memoryCurations.get(memoryKey(fingerprint));
     if (remembered) {
@@ -285,7 +298,7 @@
     flushTimer = window.setTimeout(() => {
       flushTimer = 0;
       void flush();
-    }, 24);
+    }, 0);
   }
 
   async function flush() {
@@ -431,6 +444,7 @@
       record.retryCount = 0;
       card.dataset.dumberState = "ready";
     }
+    visibilityObserver.unobserve(card);
 
     const reportKey = `${modelSignature(settings)}:${candidate.fingerprint}`;
     if (options.report === false || reportedDecisions.has(reportKey)) return;
@@ -442,7 +456,9 @@
       type: "decision",
       id: `decision:${reportKey}`,
       promoted: decision.promote,
-      latencyMs: Math.max(0, Math.round(performance.now() - candidate.queuedAt))
+      latencyMs: candidate.visibleAt
+        ? Math.max(0, Math.round(performance.now() - candidate.visibleAt))
+        : 0
     });
   }
 
@@ -547,6 +563,7 @@
       if (card.isConnected) continue;
       const candidate = cardRecords.get(card)?.candidate;
       removeCandidateFromPending(candidate);
+      visibilityObserver.unobserve(card);
       renderer.unmark(card);
       clearCardState(card);
       trackedCards.delete(card);
@@ -620,7 +637,14 @@
     if (typeof card?.getBoundingClientRect !== "function") return true;
     const rect = card.getBoundingClientRect();
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
-    return rect.bottom >= -360 && rect.top <= viewportHeight + 360;
+    return rect.bottom >= -2400 && rect.top <= viewportHeight + 2400;
+  }
+
+  function isInViewport(card) {
+    if (typeof card?.getBoundingClientRect !== "function") return true;
+    const rect = card.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+    return rect.bottom >= 0 && rect.top <= viewportHeight;
   }
 
   function renderingNeedsRepair(card, previous, next) {

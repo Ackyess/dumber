@@ -129,7 +129,7 @@ meme 是 DUMBER 的庆祝角色，不是警告角色：
 目标：让新的设计宗旨稳定存在于 X。
 
 - 删除运行时所有“纠正”“处方”“风险”“变蠢内容”文案。
-- 将模型输出从 `dumb / prescription / reminder` 迁移为内部的 `promote / dopamineScore / promotionLabel`。
+- 将模型输出从 `dumb / prescription / reminder` 迁移为 `promote / dopamineScore / durableValue / primaryDriver`，UI 标签在本地映射。
 - 保留 `DUMBER` 名称，不在界面解释它。
 - X 使用独立站点适配器；保留但不加载 Bilibili 适配器源码。
 - 使用稳定内容 ID，避免虚拟列表复用导致判定错位。
@@ -142,7 +142,7 @@ meme 是 DUMBER 的庆祝角色，不是警告角色：
 
 - 连续滚动 30 分钟不闪烁、不丢失、不重复请求；
 - 缓存命中后 100ms 内恢复视觉升级；
-- 新判定 p95 在 4 秒以内；
+- 卡片进入视口后的最终视觉状态 p95 小于 1 秒；
 - 页面重渲染不会删除 DUMBER 状态。
 
 ### v0.3 — VIP 阅读渲染器
@@ -178,10 +178,9 @@ promote
 dopamineScore
 durableValue
 primaryDriver
-promotionLabel
 ```
 
-- 用户界面只消费正向 `promotionLabel`，不展示内部负面解释。
+- 用户界面只消费本地正向 driver 标签，不展示内部负面解释。
 - X 增加引用推文与链接标题上下文。
 - 每次提示词更新必须跑完整回归集。
 

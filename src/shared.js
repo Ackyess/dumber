@@ -18,8 +18,9 @@
   const CACHE_SCHEMA_VERSION = 3;
   const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
-  const PROMPT_VERSION = "curator-2026-07-23-v2";
+  const PROMPT_VERSION = "curator-2026-07-23-v3";
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
+  const VISUAL_SLA_MS = 1000;
   // ponytail: fixed high-precision veto; make it configurable only after a real regression set justifies it.
   const MAX_PROMOTABLE_DURABLE_VALUE = 0.45;
 
@@ -522,6 +523,7 @@
     PROMPT_VERSION,
     SETTINGS_KEY,
     SETTINGS_SCHEMA_VERSION,
+    VISUAL_SLA_MS,
     applyPreferenceAction,
     clamp,
     compactRecord,

@@ -40,7 +40,7 @@
 - JSON fenced/plain 响应解析；
 - 可测试的单飞批处理器。
 
-模型看到的每条输入是一个有限字段的 context object，而不是宿主页面 HTML。提示词明确把输入当作不可信引用内容，阻止 prompt injection。
+模型看到的是经过裁剪的 X context，而不是宿主页面 HTML：正文最多 700 字，引用最多 280 字，并移除 canonical URL 等无关字段。提示词明确把输入当作不可信引用内容，阻止 prompt injection。模型只返回判定字段，正向 UI 标签由本地 driver 映射生成。
 
 每个批次必须返回全部请求 ID。缺少任意条目时整批失败并进入受控重试流程，不会把缺项静默转换为长期缓存的中性结果。旧的 `verdicts/items` 响应容器不再被接受。
 
@@ -61,6 +61,10 @@
 ### 4.2 网络策略
 
 - `AbortController` 提供硬超时；
+- 设置与缓存随 service worker 启动预热；
+- 批处理不增加人为等待，工程指标写入不阻塞网络关键路径；
+- 官方 xAI Chat Completions 使用稳定 `x-grok-conv-id` 复用提示词缓存；
+- 模型请求使用紧凑非流式 JSON，因为完成前不存在可消费的局部判定；
 - 429/5xx 最多重试一次；
 - `Retry-After` 最高等待 1.5 秒；
 - 网络错误和超时不进行无限重试；
@@ -122,6 +126,7 @@ observing → queued → requesting → promoted | ready
 关键约束：
 
 - IntersectionObserver 只分析接近视口的卡片；
+- 预判边界扩展到视口前后 2400px，给远程模型留下滚动前置时间；
 - Key 与模型均未配置完成时不扫描、不排队、不重试；
 - 每个卡片绑定当前 fingerprint；
 - 虚拟列表复用导致 fingerprint 变化时，旧视觉状态立即撤销；
@@ -130,6 +135,8 @@ observing → queued → requesting → promoted | ready
 - 每个运行 generation 只允许一个活跃消息批次；模型切换可启动新 generation，而旧响应只能被丢弃；
 - URL 轮询与 MutationObserver 一起覆盖 SPA 导航；
 - X 私信路径不会激活内容运行时。
+
+视觉延迟从卡片第一次进入真实视口开始计时；若判定在屏外预取阶段完成，记录为 0ms。目标 SLA 为 p95 小于 1000ms。
 
 ## 7. VIP 渲染器
 

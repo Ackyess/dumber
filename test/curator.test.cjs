@@ -19,20 +19,37 @@ test("builds the new curation schema", () => {
     "promote",
     "dopamineScore",
     "durableValue",
-    "primaryDriver",
-    "promotionLabel"
+    "primaryDriver"
   ]);
   assert.equal(schema.properties.curations.minItems, 1);
   assert.equal(schema.properties.curations.maxItems, 8);
   assert.equal(payload.messages[1].content.includes("item-1"), true);
-  assert.match(Curator.SYSTEM_PROMPT, /concrete project release/);
-  assert.match(Curator.SYSTEM_PROMPT, /Curiosity.*alone are never sufficient/);
+  assert.equal(payload.stream, false);
+  assert.match(Curator.SYSTEM_PROMPT, /Concrete projects/);
+  assert.match(Curator.SYSTEM_PROMPT, /Curiosity.*alone are insufficient/);
 });
 
-test("uses low reasoning only for grok-4.5", () => {
+test("uses low reasoning for grok-4.5 aliases", () => {
   const item = [{ id: "item-1", context: { text: "测试" } }];
   assert.equal(Curator.createRequestPayload({ model: "grok-4.5" }, item).reasoning_effort, "low");
+  assert.equal(Curator.createRequestPayload({ model: "grok4.5" }, item).reasoning_effort, "low");
+  assert.equal(Curator.createRequestPayload({ model: "grok_4_5-latest" }, item).reasoning_effort, "low");
   assert.equal(Curator.createRequestPayload(settings, item).reasoning_effort, undefined);
+});
+
+test("caps model context and omits non-semantic fields", () => {
+  const payload = Curator.createRequestPayload(settings, [{
+    id: "item-1",
+    context: {
+      text: "x".repeat(2000),
+      quoteText: "q".repeat(1000),
+      canonicalUrl: "https://x.com/example/status/1"
+    }
+  }]);
+  const [item] = JSON.parse(payload.messages[1].content).items;
+  assert.equal(item.context.text.length, 700);
+  assert.equal(item.context.quoteText.length, 280);
+  assert.equal(item.context.canonicalUrl, undefined);
 });
 
 test("parses structured model output", () => {
@@ -45,8 +62,7 @@ test("parses structured model output", () => {
             promote: true,
             dopamineScore: 0.91,
             durableValue: 0.2,
-            primaryDriver: "high_emotion",
-            promotionLabel: "高情绪浓度"
+            primaryDriver: "high_emotion"
           }]
         })
       }
@@ -55,6 +71,7 @@ test("parses structured model output", () => {
   const [result] = Curator.parseCurationResponse(body, ["item-1"]);
   assert.equal(result.promote, true);
   assert.equal(result.primaryDriver, "high_emotion");
+  assert.equal(result.promotionLabel, "高情绪浓度");
 });
 
 test("single-flight batcher deduplicates keys and never overlaps workers", async () => {

@@ -44,7 +44,13 @@ def fixture_markup(platform: str) -> str:
     return '<div id="bewly-host"></div>'
 
 
-def create_fixture_page(browser: Browser, platform: str, configured: bool = True) -> Page:
+def create_fixture_page(
+    browser: Browser,
+    platform: str,
+    configured: bool = True,
+    top_offset: int = 42,
+    curate_delay_ms: int = 0,
+) -> Page:
     page = browser.new_page(viewport={"width": 1280, "height": 800})
     page.set_content(
         f"""
@@ -55,7 +61,7 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
           <style>
             :root {{ color-scheme: light; font-family: system-ui, sans-serif; }}
             body {{ margin: 0; min-height: 1800px; background: #f2f3f6; color: #111; }}
-            main {{ width: 620px; margin: 42px auto; }}
+            main {{ width: 620px; margin: {top_offset}px auto 42px; }}
             article, .bili-video-card {{
               position: relative; display: block; margin: 0 0 28px; padding: 20px;
               background: #fff; border: 1px solid #ddd; border-radius: 16px;
@@ -76,7 +82,7 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
 
     page.evaluate(
         """
-        ({ platform, configured }) => {
+        ({ platform, configured, curateDelayMs }) => {
           let settings = {
             schemaVersion: 2,
             enabled: true,
@@ -128,6 +134,9 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
               sendMessage: async (message) => {
                 if (message.type === "curate") {
                   window.__dumberTest.curateCalls += 1;
+                  if (curateDelayMs) {
+                    await new Promise((resolve) => setTimeout(resolve, curateDelayMs));
+                  }
                   if (window.__dumberTest.deferCurate) {
                     return new Promise((resolve) => {
                       window.__dumberTest.deferred.push({ message, resolve });
@@ -179,7 +188,11 @@ def create_fixture_page(browser: Browser, platform: str, configured: bool = True
           }
         }
         """,
-        {"platform": platform, "configured": configured},
+        {
+            "platform": platform,
+            "configured": configured,
+            "curateDelayMs": curate_delay_ms,
+        },
     )
 
     for script in SCRIPTS:
@@ -231,6 +244,27 @@ def run() -> None:
         assert layout_after == layout_before
         assert page.locator("article.dumber-ring-outline").count() == 1
         assert page.locator(".dumber-expanded").count() == 0
+        assert page.evaluate("window.__dumberTest.curateCalls") == 1
+        page.close()
+
+        page = create_fixture_page(
+            browser,
+            "x",
+            top_offset=1800,
+            curate_delay_ms=700,
+        )
+        page.locator("article.dumber-vip").wait_for(state="attached")
+        assert page.locator("article").bounding_box()["y"] > 800
+        page.wait_for_function(
+            "window.__dumberTest.events.some((event) => event.type === 'decision')"
+        )
+        assert page.evaluate(
+            "window.__dumberTest.events.find((event) => event.type === 'decision').latencyMs"
+        ) == 0
+        started_at = page.evaluate("performance.now()")
+        page.evaluate("window.scrollTo(0, 1650)")
+        page.locator("article.dumber-vip").wait_for(state="visible")
+        assert page.evaluate("performance.now()") - started_at < 1000
         assert page.evaluate("window.__dumberTest.curateCalls") == 1
         page.close()
 

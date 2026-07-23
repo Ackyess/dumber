@@ -23,7 +23,7 @@ npm run package
 2. 更新 JSON Schema 单元测试；
 3. 运行完整评测集；
 4. 记录 precision、recall、误报类别和稳定性；
-5. 确认 `promotionLabel` 仍只包含正向 UI 语言。
+5. 确认本地 driver 标签仍只包含正向 UI 语言。
 
 ## 修改站点适配器
 
