@@ -3,6 +3,8 @@ const assert = require("node:assert/strict");
 const Shared = require("../src/shared.js");
 
 const {
+  CANDIDATE_MAX_DURABLE,
+  CANDIDATE_MIN_DOPAMINE,
   DEFAULT_SETTINGS,
   EXTRACTOR_VERSION,
   PROMPT_VERSION,
@@ -80,6 +82,17 @@ test("preserves a current-schema local credential and migrates the old timeout",
   assert.equal(settings.model, "curator-model");
   assert.equal(settings.requestTimeoutMs, 28000);
   assert.equal(settings.bilibiliEnabled, false);
+});
+
+test("migrates the former maximum-detection floor to the stronger range", () => {
+  const migrated = sanitizeSettings({
+    schemaVersion: 3,
+    apiKey: "local-key",
+    model: "deepseek-v4-flash",
+    promotionThreshold: 0.5
+  });
+  assert.equal(migrated.promotionThreshold, CANDIDATE_MIN_DOPAMINE);
+  assert.equal(migrated.apiKey, "local-key");
 });
 
 test("normalizes OpenAI-compatible API roots", () => {
@@ -177,6 +190,32 @@ test("normalizes only known curation ids and enforces positive UI labels", () =>
   assert.deepEqual(normalizeCurations({ verdicts: curations }, ["known"]), []);
 });
 
+test("maximum detection catches observed low-value X patterns despite false provider flags", () => {
+  const raw = [
+    ["complaint", 0.3, 0.2],
+    ["hypothetical", 0.4, 0.3],
+    ["reaction", 0.5, 0.2],
+    ["context-reply", 0.2, 0.7],
+    ["rumor", 0.6, 0.1]
+  ].map(([id, dopamineScore, durableValue]) => ({
+    id,
+    promote: false,
+    dopamineScore,
+    durableValue,
+    primaryDriver: "curiosity_gap"
+  }));
+  const curations = normalizeCurations({ curations: raw }, raw.map(({ id }) => id));
+
+  assert.equal(curations.length, raw.length);
+  assert.equal(curations.every((curation) => curation.promote), true);
+  assert.equal(curations.every((curation) => getPromotionDecision(
+    curation,
+    { promotionThreshold: CANDIDATE_MIN_DOPAMINE },
+    {},
+    {}
+  ).promote), true);
+});
+
 test("parses fenced, multipart and already-decoded JSON content", () => {
   assert.deepEqual(parseJsonContent("```json\n{\"ok\":true}\n```"), { ok: true });
   assert.deepEqual(parseJsonContent([{ text: "{\"ok\":" }, { text: "true}" }]), { ok: true });
@@ -267,21 +306,22 @@ test("default strictness keeps durable value as a hard promotion gate", () => {
 });
 
 test("strictness slider controls both stimulation and durable-value gates", () => {
-  assert.equal(promotionDurableLimit(0.5), 0.65);
+  assert.equal(promotionDurableLimit(0.2), CANDIDATE_MAX_DURABLE);
+  assert.equal(promotionDurableLimit(0.5), 0.6);
   assert.equal(promotionDurableLimit(0.72), 0.45);
   assert.equal(promotionDurableLimit(0.95), 0.25);
 
   const curation = {
     promote: true,
-    dopamineScore: 0.66,
-    durableValue: 0.6,
+    dopamineScore: 0.2,
+    durableValue: 0.7,
     primaryDriver: "instant_gratification"
   };
-  const lenient = getPromotionDecision(curation, { promotionThreshold: 0.5 }, {}, {});
+  const lenient = getPromotionDecision(curation, { promotionThreshold: 0.2 }, {}, {});
   const balanced = getPromotionDecision(curation, { promotionThreshold: 0.72 }, {}, {});
   assert.equal(lenient.promote, true);
   assert.equal(balanced.promote, false);
-  assert.equal(lenient.durableLimit, 0.65);
+  assert.equal(lenient.durableLimit, 0.8);
   assert.equal(balanced.durableLimit, 0.45);
 });
 
@@ -312,7 +352,7 @@ test("less feedback vetoes the same item immediately", () => {
 });
 
 test("settings clamp the supported promotion range", () => {
-  assert.equal(sanitizeSettings({ promotionThreshold: 0.1 }).promotionThreshold, 0.5);
+  assert.equal(sanitizeSettings({ promotionThreshold: 0.1 }).promotionThreshold, 0.2);
   assert.equal(sanitizeSettings({ promotionThreshold: 2 }).promotionThreshold, 0.95);
 });
 

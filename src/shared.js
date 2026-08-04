@@ -14,13 +14,15 @@
     "dumberPromotionCacheV2"
   ]);
 
-  const SETTINGS_SCHEMA_VERSION = 3;
+  const SETTINGS_SCHEMA_VERSION = 4;
   const CACHE_SCHEMA_VERSION = 3;
   const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
-  const PROMPT_VERSION = "curator-2026-08-04-v5";
+  const PROMPT_VERSION = "curator-2026-08-04-v6";
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
   const VISUAL_SLA_MS = 1000;
+  const CANDIDATE_MIN_DOPAMINE = 0.2;
+  const CANDIDATE_MAX_DURABLE = 0.8;
   const DEFAULT_PROMOTABLE_DURABLE_VALUE = 0.45;
 
   const DRIVER_LABELS = Object.freeze({
@@ -175,6 +177,9 @@
     if (wasOfficialXai) apiBaseUrl = DEFAULT_SETTINGS.apiBaseUrl;
 
     const legacyThreshold = source.promotionThreshold ?? source.threshold;
+    const migratedThreshold = upgrading && finiteNumber(legacyThreshold, -1) === 0.5
+      ? CANDIDATE_MIN_DOPAMINE
+      : legacyThreshold;
     const requestTimeoutMs = finiteNumber(source.requestTimeoutMs, DEFAULT_SETTINGS.requestTimeoutMs);
     return {
       schemaVersion: SETTINGS_SCHEMA_VERSION,
@@ -188,8 +193,8 @@
         ? DEFAULT_SETTINGS.model
         : sourceModel || DEFAULT_SETTINGS.model,
       promotionThreshold: clamp(
-        finiteNumber(legacyThreshold, DEFAULT_SETTINGS.promotionThreshold),
-        0.5,
+        finiteNumber(migratedThreshold, DEFAULT_SETTINGS.promotionThreshold),
+        CANDIDATE_MIN_DOPAMINE,
         0.95
       ),
       xEnabled: source.xEnabled !== false,
@@ -242,11 +247,14 @@
       if (!id || !allowed.has(id) || seen.has(id)) continue;
       seen.add(id);
       const primaryDriver = normalizeDriver(item.primaryDriver);
+      const dopamineScore = clamp(finiteNumber(item.dopamineScore, 0), 0, 1);
+      const durableValue = clamp(finiteNumber(item.durableValue, 0.5), 0, 1);
       normalized.push({
         id,
-        promote: item.promote === true,
-        dopamineScore: clamp(finiteNumber(item.dopamineScore, 0), 0, 1),
-        durableValue: clamp(finiteNumber(item.durableValue, 0.5), 0, 1),
+        // Model booleans are inconsistent across providers; scores define the broad candidate deterministically.
+        promote: dopamineScore >= CANDIDATE_MIN_DOPAMINE && durableValue <= CANDIDATE_MAX_DURABLE,
+        dopamineScore,
+        durableValue,
         primaryDriver,
         promotionLabel: positivePromotionLabel(item.promotionLabel, primaryDriver)
       });
@@ -399,9 +407,12 @@
   }
 
   function promotionDurableLimit(thresholdValue) {
-    // ponytail: one linear strictness control; split the gates only if real usage needs independent tuning.
-    const threshold = clamp(finiteNumber(thresholdValue, DEFAULT_SETTINGS.promotionThreshold), 0.5, 0.95);
-    return Math.round((0.65 - (((threshold - 0.5) / 0.45) * 0.4)) * 100) / 100;
+    // ponytail: one strictness control; split the gates only if real usage needs independent tuning.
+    const threshold = clamp(finiteNumber(thresholdValue, DEFAULT_SETTINGS.promotionThreshold), CANDIDATE_MIN_DOPAMINE, 0.95);
+    const limit = threshold <= DEFAULT_SETTINGS.promotionThreshold
+      ? CANDIDATE_MAX_DURABLE - (((threshold - CANDIDATE_MIN_DOPAMINE) / (DEFAULT_SETTINGS.promotionThreshold - CANDIDATE_MIN_DOPAMINE)) * 0.35)
+      : 0.45 - (((threshold - DEFAULT_SETTINGS.promotionThreshold) / (0.95 - DEFAULT_SETTINGS.promotionThreshold)) * 0.2);
+    return Math.round(limit * 100) / 100;
   }
 
   function getPromotionDecision(curation, settingsValue, profileValue, contextValue) {
@@ -527,6 +538,8 @@
   return Object.freeze({
     CACHE_KEY,
     CACHE_SCHEMA_VERSION,
+    CANDIDATE_MAX_DURABLE,
+    CANDIDATE_MIN_DOPAMINE,
     DEFAULT_PROFILE,
     DEFAULT_SETTINGS,
     DRIVER_KEYS,

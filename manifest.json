@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DUMBER — AI 高刺激内容策展",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "真诚挑选、优化并推广 X 信息流中的高刺激、低持久价值内容。",
   "minimum_chrome_version": "114",
   "icons": {

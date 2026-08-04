@@ -26,7 +26,8 @@ test("builds the new curation schema", () => {
   assert.equal(payload.messages[1].content.includes("item-1"), true);
   assert.equal(payload.stream, false);
   assert.match(Curator.SYSTEM_PROMPT, /Concrete projects/);
-  assert.match(Curator.SYSTEM_PROMPT, /Curiosity.*alone are insufficient/);
+  assert.match(Curator.SYSTEM_PROMPT, /authority and celebrity signals/);
+  assert.match(Curator.SYSTEM_PROMPT, /visible excerpt itself contains evidence/);
 });
 
 test("uses non-thinking JSON output for DeepSeek Flash", () => {
