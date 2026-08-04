@@ -215,6 +215,7 @@ def run() -> None:
         page.wait_for_timeout(120)
         assert page.evaluate("window.__dumberTest.curateCalls") == 0
         assert page.locator("[data-dumber-state]").count() == 0
+        assert page.locator(".dumber-activity[hidden]").count() == 1
         page.locator("article").evaluate("element => { element.style.position = 'static'; }")
         layout_probe = """
           element => {
@@ -236,10 +237,24 @@ def run() -> None:
           }
         """
         layout_before = page.locator("article").evaluate(layout_probe)
+        page.evaluate("window.__dumberTest.deferCurate = true")
         page.evaluate(
             "window.__dumberTest.updateSettings({ apiKey: 'fixture-key', model: 'fixture-model' })"
         )
+        page.locator('.dumber-activity[data-phase="requesting"]').wait_for(state="visible")
+        assert "AI 分析中" in page.locator(".dumber-activity").inner_text()
+        assert "1 条处理中" in page.locator(".dumber-activity").inner_text()
+        assert page.locator(".dumber-activity").get_attribute("role") == "status"
+        page.emulate_media(reduced_motion="reduce")
+        assert page.locator(".dumber-activity-signal").evaluate(
+            "element => getComputedStyle(element).animationName"
+        ) == "none"
+        page.evaluate("window.__dumberTest.resolveDeferred(); window.__dumberTest.deferCurate = false")
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.wait_for_function(
+            "document.querySelector('.dumber-activity').dataset.phase === 'idle'"
+        )
+        assert "1 条已处理" in page.locator(".dumber-activity").inner_text()
         layout_after = page.locator("article").evaluate(layout_probe)
         assert layout_after == layout_before
         assert page.locator("article.dumber-ring-outline").count() == 1

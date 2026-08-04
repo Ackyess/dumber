@@ -140,7 +140,7 @@ observing → queued → requesting → promoted | ready
 
 ## 7. VIP 渲染器
 
-`src/renderer.js` 只通过 class、CSS 变量和一个全局 sidecar 工作。
+`src/renderer.js` 只通过 class、CSS 变量、一个全局 sidecar 和一个 fixed 活动指示器工作。
 
 卡片本体：
 
@@ -160,6 +160,8 @@ sidecar：
 - 没有任何无重叠位置时保持隐藏，不以覆盖正文作为降级方案；
 - 通过 `event.composedPath()` 支持 Shadow DOM 内的卡片；
 - 偏好按钮直接写入本地画像。
+
+活动指示器直接观察现有 `data-dumber-state`，聚合扫描、排队、请求、完成和错误数量；不复制请求状态，也不进入页面布局。
 
 ## 8. 数据最小化
 

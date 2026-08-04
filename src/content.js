@@ -595,6 +595,7 @@
     delete card.dataset.dumberFingerprint;
     delete card.dataset.dumberState;
     cardRecords.delete(card);
+    renderer.syncActivity();
   }
 
   function sanitizeContext(value) {

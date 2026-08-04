@@ -212,8 +212,126 @@
       line-height: 1.2;
     }
 
+    .dumber-activity {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2147483646;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      min-width: 214px;
+      padding: 10px 12px;
+      color: #f8f8fb;
+      background: rgba(15, 15, 22, .94);
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 14px;
+      box-shadow: 0 12px 38px rgba(0, 0, 0, .3), 0 0 18px rgba(160, 114, 255, .14);
+      pointer-events: none;
+      overflow: hidden;
+      box-sizing: border-box;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 160ms ease, transform 180ms cubic-bezier(.2, .8, .2, 1);
+      backdrop-filter: blur(16px) saturate(1.12);
+      -webkit-backdrop-filter: blur(16px) saturate(1.12);
+    }
+
+    .dumber-activity[hidden] {
+      display: none !important;
+    }
+
+    .dumber-activity::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 2px;
+      background: linear-gradient(90deg, #8fffd8, #80c8ff, #b98cff, #ff87bb, #ffe06f, #8fffd8);
+      background-size: 200% 100%;
+      opacity: .24;
+    }
+
+    .dumber-activity[data-phase="requesting"]::after,
+    .dumber-activity[data-phase="queued"]::after {
+      opacity: 1;
+      animation: dumber-activity-scan 1100ms linear infinite;
+    }
+
+    .dumber-activity[data-phase="error"] {
+      border-color: rgba(255, 143, 112, .55);
+    }
+
+    .dumber-activity-signal {
+      position: relative;
+      display: block;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #8fffd8, #80c8ff, #b98cff, #ff87bb, #ffe06f, #8fffd8);
+      box-shadow: 0 0 14px rgba(143, 255, 216, .2);
+    }
+
+    .dumber-activity-signal::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border: 4px solid rgba(15, 15, 22, .92);
+      border-radius: inherit;
+      background: #caff7a;
+    }
+
+    .dumber-activity[data-phase="requesting"] .dumber-activity-signal,
+    .dumber-activity[data-phase="queued"] .dumber-activity-signal {
+      animation: dumber-activity-spin 950ms linear infinite;
+    }
+
+    .dumber-activity[data-phase="error"] .dumber-activity-signal::after {
+      background: #ff8f70;
+    }
+
+    .dumber-activity-copy {
+      display: grid;
+      min-width: 0;
+      gap: 3px;
+    }
+
+    .dumber-activity-label,
+    .dumber-activity-detail {
+      display: block;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .dumber-activity-label {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 820;
+      line-height: 1.2;
+      letter-spacing: .01em;
+    }
+
+    .dumber-activity-detail {
+      color: rgba(255, 255, 255, .62);
+      font-size: 10px;
+      font-weight: 560;
+      line-height: 1.25;
+    }
+
+    @keyframes dumber-activity-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes dumber-activity-scan {
+      to { background-position: -200% 0; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .dumber-sidecar { transition: opacity 80ms linear, visibility 0s linear 80ms; transform: none; }
+      .dumber-activity,
+      .dumber-activity::after,
+      .dumber-activity-signal { animation: none !important; transition: none !important; }
     }
 
     @media (max-width: 520px) {
@@ -256,9 +374,20 @@
     let activePayload = null;
     let hideTimer = 0;
     let positionFrame = 0;
+    let activityFrame = 0;
 
     ensureStyles(doc);
     const sidecar = createSidecar(doc);
+    const activity = createActivity(doc);
+    const activityLabel = activity.querySelector(".dumber-activity-label");
+    const activityDetail = activity.querySelector(".dumber-activity-detail");
+    const activityObserver = new win.MutationObserver(scheduleActivitySync);
+    activityObserver.observe(doc.documentElement, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-dumber-state"]
+    });
+    syncActivity();
     const celebration = sidecar.querySelector(".dumber-celebration");
     const label = sidecar.querySelector(".dumber-sidecar-label");
     const copy = sidecar.querySelector(".dumber-sidecar-copy");
@@ -393,6 +522,53 @@
         }
         syncSpectrumAnimation(card);
       }
+    }
+
+    function scheduleActivitySync() {
+      if (activityFrame) return;
+      activityFrame = win.requestAnimationFrame?.(() => {
+        activityFrame = 0;
+        syncActivity();
+      }) || win.setTimeout(() => {
+        activityFrame = 0;
+        syncActivity();
+      }, 16);
+    }
+
+    function syncActivity() {
+      const counts = { observing: 0, queued: 0, requesting: 0, ready: 0, promoted: 0, error: 0 };
+      for (const card of doc.querySelectorAll("[data-dumber-state]")) {
+        const state = card.dataset.dumberState;
+        if (Object.hasOwn(counts, state)) counts[state] += 1;
+      }
+      const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+      activity.hidden = total === 0;
+      if (!total) return;
+
+      const completed = counts.ready + counts.promoted;
+      let phase = "idle";
+      let title = "AI 已就绪";
+      let detail = `${completed} 条已处理 · ${counts.promoted} 条精选`;
+      if (counts.requesting) {
+        phase = "requesting";
+        title = "AI 分析中";
+        detail = `${counts.requesting} 条处理中 · ${completed} 条已处理`;
+      } else if (counts.queued) {
+        phase = "queued";
+        title = "等待 AI 分析";
+        detail = `${counts.queued} 条排队 · ${completed} 条已处理`;
+      } else if (counts.observing) {
+        phase = "observing";
+        title = "正在扫描信息流";
+        detail = `${counts.observing} 条已发现 · ${completed} 条已处理`;
+      } else if (counts.error) {
+        phase = "error";
+        title = "AI 暂时没响应";
+        detail = `${counts.error} 条等待重试 · ${completed} 条已处理`;
+      }
+      activity.dataset.phase = phase;
+      if (activityLabel.textContent !== title) activityLabel.textContent = title;
+      if (activityDetail.textContent !== detail) activityDetail.textContent = detail;
     }
 
     function handlePointerOver(event) {
@@ -561,6 +737,11 @@
 
     function destroy() {
       hide();
+      activityObserver.disconnect();
+      if (activityFrame) {
+        win.cancelAnimationFrame?.(activityFrame);
+        win.clearTimeout(activityFrame);
+      }
       doc.removeEventListener("pointerover", handlePointerOver, true);
       doc.removeEventListener("pointerout", handlePointerOut, true);
       doc.removeEventListener("focusin", handleFocusIn, true);
@@ -570,9 +751,10 @@
       reducedMotion?.removeEventListener?.("change", syncAllSpectrumAnimations);
       for (const card of [...markedCards]) unmark(card);
       sidecar.remove();
+      activity.remove();
     }
 
-    return Object.freeze({ destroy, ensureStyles, mark, unmark });
+    return Object.freeze({ destroy, ensureStyles, mark, syncActivity: scheduleActivitySync, unmark });
   }
 
   function createSidecar(doc) {
@@ -597,6 +779,27 @@
     `;
     (doc.body || doc.documentElement).append(sidecar);
     return sidecar;
+  }
+
+  function createActivity(doc) {
+    const existing = doc.querySelector?.(".dumber-activity[data-dumber-owned]");
+    if (existing) return existing;
+    const activity = doc.createElement("aside");
+    activity.className = "dumber-activity";
+    activity.dataset.dumberOwned = "";
+    activity.hidden = true;
+    activity.setAttribute("role", "status");
+    activity.setAttribute("aria-live", "polite");
+    activity.setAttribute("aria-atomic", "true");
+    activity.innerHTML = `
+      <span class="dumber-activity-signal" aria-hidden="true"></span>
+      <span class="dumber-activity-copy">
+        <strong class="dumber-activity-label">正在扫描信息流</strong>
+        <span class="dumber-activity-detail">等待发现内容</span>
+      </span>
+    `;
+    (doc.body || doc.documentElement).append(activity);
+    return activity;
   }
 
   function uniqueConnected(elements, card) {
