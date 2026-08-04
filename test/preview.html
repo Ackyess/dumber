@@ -37,7 +37,7 @@
     };
     let profile = { schemaVersion: 2, drivers: {}, accounts: {}, topics: {}, items: {}, totalActions: 0, updatedAt: 0 };
     const changeListeners = [];
-    window.__dumberTest = { curateCalls: 0, preferences: [], events: [] };
+    window.__dumberTest = { curateCalls: 0, emphasisCalls: 0, preferences: [], events: [] };
 
     window.chrome = {
       runtime: {
@@ -55,6 +55,13 @@
                 promotionLabel: "高共鸣",
                 cacheHit: false
               }))
+            };
+          }
+          if (message.type === "emphasize") {
+            window.__dumberTest.emphasisCalls += 1;
+            return {
+              ok: true,
+              emphasis: { phrases: ["惊人结论", "绝对想不到"], cacheHit: false }
             };
           }
           if (message.type === "preferenceAction") {

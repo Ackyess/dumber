@@ -6,7 +6,9 @@ const {
   CANDIDATE_MAX_DURABLE,
   CANDIDATE_MIN_DOPAMINE,
   DEFAULT_SETTINGS,
+  EMPHASIS_PROMPT_VERSION,
   EXTRACTOR_VERSION,
+  PIPELINE_PROMPT_VERSION,
   PROMPT_VERSION,
   SETTINGS_SCHEMA_VERSION,
   applyPreferenceAction,
@@ -16,6 +18,7 @@ const {
   hashText,
   normalizeApiUrl,
   normalizeCurations,
+  normalizeEmphasis,
   normalizeMetrics,
   normalizeProfile,
   parseJsonContent,
@@ -188,6 +191,15 @@ test("normalizes only known curation ids and enforces positive UI labels", () =>
   }, ["known"]);
   assert.equal(english.promotionLabel, "强好奇驱动");
   assert.deepEqual(normalizeCurations({ verdicts: curations }, ["known"]), []);
+});
+
+test("keeps only exact source phrases for second-stage emphasis", () => {
+  assert.equal(PIPELINE_PROMPT_VERSION.includes(EMPHASIS_PROMPT_VERSION), true);
+  assert.deepEqual(normalizeEmphasis({
+    phrases: ["太疯狂", "must see", "模型编造", "太疯狂", "X"]
+  }, "这条消息真的太疯狂了，YOU MUST SEE THIS。"), {
+    phrases: ["太疯狂", "MUST SEE"]
+  });
 });
 
 test("maximum detection catches observed low-value X patterns despite false provider flags", () => {

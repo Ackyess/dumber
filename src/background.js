@@ -23,6 +23,11 @@ const batcher = Curator.createSingleFlightBatcher({
   delayMs: 0,
   worker: processQueuedBatch
 });
+const emphasisBatcher = Curator.createSingleFlightBatcher({
+  maxBatchSize: 8,
+  delayMs: 60,
+  worker: processEmphasisBatch
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   void migrateInstallation();
@@ -43,6 +48,7 @@ void ensureCache().catch(() => undefined);
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const supported = new Set([
     "curate",
+    "emphasize",
     "testConnection",
     "preferenceAction",
     "runtimeEvents",
@@ -67,6 +73,10 @@ async function handleMessage(message) {
     case "curate":
       return {
         curations: await curateItems(message.items, message.extractorVersion)
+      };
+    case "emphasize":
+      return {
+        emphasis: await emphasizeItem(message.item, message.extractorVersion)
       };
     case "testConnection":
       return testConnection();
@@ -146,13 +156,7 @@ async function curateItems(rawItems, extractorVersionValue) {
   let cacheHits = 0;
 
   for (const item of items) {
-    const key = Shared.createCacheKey({
-      apiBaseUrl: settings.apiBaseUrl,
-      model: settings.model,
-      promptVersion: Shared.PROMPT_VERSION,
-      extractorVersion,
-      hash: item.hash
-    });
+    const key = itemCacheKey(settings, extractorVersion, item.hash);
     const cached = cache.entries[key];
     if (cached?.curation && now - cached.at <= CACHE_TTL_MS) {
       cacheHits += 1;
@@ -194,6 +198,37 @@ async function curateItems(rawItems, extractorVersionValue) {
     ...Shared.createNeutralCuration(item.id),
     cacheHit: false
   });
+}
+
+async function emphasizeItem(rawItem, extractorVersionValue) {
+  const generation = dataGeneration;
+  const item = sanitizeItems([rawItem])[0];
+  if (!item) return { phrases: [], cacheHit: false };
+
+  const settings = await getSettings();
+  const validation = Shared.validateSettings(settings);
+  if (!validation.ok) throw new Error(validation.problems[0]);
+  await assertEndpointPermission(settings);
+
+  const extractorVersion = Shared.normalizeText(extractorVersionValue).slice(0, 120)
+    || Shared.EXTRACTOR_VERSION;
+  const cache = await ensureCache();
+  assertGeneration(generation);
+  const key = itemCacheKey(settings, extractorVersion, item.hash);
+  const cached = cache.entries[key];
+  if (cached?.emphasis && Date.now() - cached.at <= CACHE_TTL_MS) {
+    return { ...cached.emphasis, cacheHit: true };
+  }
+
+  const emphasis = await emphasisBatcher.enqueue(`emphasis:${key}`, {
+    settings,
+    extractorVersion,
+    cacheKey: key,
+    item,
+    generation
+  }, `emphasis:${requestGroupKey(settings, extractorVersion)}`);
+  assertGeneration(generation);
+  return { ...emphasis, cacheHit: false };
 }
 
 async function testConnection() {
@@ -263,7 +298,11 @@ async function processQueuedBatch(entries) {
       };
       output.set(entry.key, curation);
       if (!entry.value.noCache) {
-        cache.entries[entry.key] = { curation, at: Date.now() };
+        cache.entries[entry.key] = {
+          ...cache.entries[entry.key],
+          curation,
+          at: Date.now()
+        };
       }
     }
 
@@ -286,20 +325,48 @@ async function processQueuedBatch(entries) {
   }
 }
 
+async function processEmphasisBatch(entries) {
+  const first = entries[0]?.value;
+  if (!first) return new Map();
+  const generation = first.generation;
+  assertGeneration(generation);
+  const settings = first.settings;
+  const apiItems = entries.map((entry, index) => ({
+    id: `emphasis-${index}-${Shared.hashText(entry.key)}`,
+    context: { text: entry.value.item.context.text }
+  }));
+  const emphases = await requestEmphases(settings, apiItems, generation);
+  assertGeneration(generation);
+  const byId = new Map(emphases.map((emphasis) => [emphasis.id, emphasis]));
+  const cache = await ensureCache();
+  const output = new Map();
+
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    const raw = byId.get(apiItems[index].id) || { phrases: [] };
+    const emphasis = Shared.normalizeEmphasis(raw, entry.value.item.context.text);
+    output.set(entry.key, emphasis);
+    cache.entries[entry.value.cacheKey] = {
+      ...cache.entries[entry.value.cacheKey],
+      emphasis,
+      at: Date.now()
+    };
+  }
+
+  trimCache(cache);
+  await persistCache(cache, generation);
+  return output;
+}
+
 async function requestCurations(settings, items, generation) {
-  let result = await executePayload(settings, Curator.createRequestPayload(settings, items, true), generation);
-  if (!result.response.ok && result.response.status === 400 && isSchemaCompatibilityError(result.body)) {
-    result = await executePayload(settings, Curator.createRequestPayload(settings, items, false), generation);
-  }
-
-  if (!result.response.ok) {
-    const detail = Curator.responseErrorMessage(result.body, result.response.status);
-    throw new Error(`模型请求失败：${detail}`);
-  }
-
+  const body = await executeStructuredRequest(
+    settings,
+    (strict) => Curator.createRequestPayload(settings, items, strict),
+    generation
+  );
   try {
     const expectedIds = items.map((item) => item.id);
-    const curations = Curator.parseCurationResponse(result.body, expectedIds);
+    const curations = Curator.parseCurationResponse(body, expectedIds);
     if (curations.length !== expectedIds.length) {
       const returnedIds = new Set(curations.map((curation) => curation.id));
       const missing = expectedIds.filter((id) => !returnedIds.has(id));
@@ -309,6 +376,38 @@ async function requestCurations(settings, items, generation) {
   } catch (error) {
     throw new Error(`模型返回的结构化结果无法解析：${error.message}`);
   }
+}
+
+async function requestEmphases(settings, items, generation) {
+  const body = await executeStructuredRequest(
+    settings,
+    (strict) => Curator.createEmphasisRequestPayload(settings, items, strict),
+    generation
+  );
+  try {
+    const expectedIds = items.map((item) => item.id);
+    const emphases = Curator.parseEmphasisResponse(body, items);
+    if (emphases.length !== expectedIds.length) {
+      const returnedIds = new Set(emphases.map((emphasis) => emphasis.id));
+      const missing = expectedIds.filter((id) => !returnedIds.has(id));
+      throw new Error(`缺少 ${missing.length} 条结果`);
+    }
+    return emphases;
+  } catch (error) {
+    throw new Error(`模型返回的文案强化结果无法解析：${error.message}`);
+  }
+}
+
+async function executeStructuredRequest(settings, createPayload, generation) {
+  let result = await executePayload(settings, createPayload(true), generation);
+  if (!result.response.ok && result.response.status === 400 && isSchemaCompatibilityError(result.body)) {
+    result = await executePayload(settings, createPayload(false), generation);
+  }
+  if (!result.response.ok) {
+    const detail = Curator.responseErrorMessage(result.body, result.response.status);
+    throw new Error(`模型请求失败：${detail}`);
+  }
+  return result.body;
 }
 
 
@@ -477,9 +576,19 @@ function requestGroupKey(settings, extractorVersion) {
     model: settings.model,
     apiKey: settings.apiKey,
     requestTimeoutMs: settings.requestTimeoutMs,
-    promptVersion: Shared.PROMPT_VERSION,
+    promptVersion: Shared.PIPELINE_PROMPT_VERSION,
     extractorVersion
   }));
+}
+
+function itemCacheKey(settings, extractorVersion, hash) {
+  return Shared.createCacheKey({
+    apiBaseUrl: settings.apiBaseUrl,
+    model: settings.model,
+    promptVersion: Shared.PIPELINE_PROMPT_VERSION,
+    extractorVersion,
+    hash
+  });
 }
 
 async function ensureCache() {
@@ -510,13 +619,19 @@ function normalizeCache(value) {
   const entries = {};
   const now = Date.now();
   for (const [key, entry] of Object.entries(source)) {
-    if (!entry?.curation || now - Number(entry.at || 0) > CACHE_TTL_MS) continue;
-    const normalized = Shared.normalizeCurations({
-      curations: [{ id: "stored", ...entry.curation }]
-    }, ["stored"])[0];
-    if (!normalized) continue;
-    const { id: _id, ...curation } = normalized;
-    entries[key] = { curation, at: Number(entry.at) || now };
+    if (!entry || now - Number(entry.at || 0) > CACHE_TTL_MS) continue;
+    const normalizedEntry = { at: Number(entry.at) || now };
+    if (entry.curation) {
+      const normalized = Shared.normalizeCurations({
+        curations: [{ id: "stored", ...entry.curation }]
+      }, ["stored"])[0];
+      if (normalized) {
+        const { id: _id, ...curation } = normalized;
+        normalizedEntry.curation = curation;
+      }
+    }
+    if (entry.emphasis) normalizedEntry.emphasis = Shared.normalizeEmphasis(entry.emphasis);
+    if (normalizedEntry.curation || normalizedEntry.emphasis) entries[key] = normalizedEntry;
   }
   return {
     schemaVersion: Shared.CACHE_SCHEMA_VERSION,
@@ -723,6 +838,7 @@ async function performClearLocalData() {
   dataGeneration += 1;
   const cancellation = createCancellationError("本地数据已清除。");
   batcher.clear(cancellation);
+  emphasisBatcher.clear(cancellation);
   for (const controller of activeControllers) controller.abort();
   activeControllers.clear();
 

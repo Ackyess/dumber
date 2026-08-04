@@ -151,6 +151,18 @@ function curationMessage(id = "client-1", hash = "content-hash") {
   };
 }
 
+function emphasisMessage(id = "client-1", hash = "content-hash") {
+  return {
+    type: "emphasize",
+    extractorVersion: Shared.EXTRACTOR_VERSION,
+    item: {
+      id,
+      hash,
+      context: { text: "这是一条具有强烈好奇驱动和即时吸引力的测试内容。" }
+    }
+  };
+}
+
 test("background performs structured curation and serves the next request from cache", async () => {
   const calls = [];
   const harness = createHarness(async (url, init) => {
@@ -176,6 +188,31 @@ test("background performs structured curation and serves the next request from c
   assert.equal(dashboard.cache.entries, 1);
   assert.equal(dashboard.metrics.cacheHits, 1);
   assert.deepEqual(dashboard.queue, { pending: 0, active: 0, running: false });
+});
+
+test("background runs and caches an independent exact-phrase emphasis pass", async () => {
+  let calls = 0;
+  const harness = createHarness(async (_url, init) => {
+    calls += 1;
+    const payload = JSON.parse(init.body);
+    const requested = JSON.parse(payload.messages[1].content).items;
+    const emphases = requested.map((item) => ({
+      id: item.id,
+      phrases: ["强烈好奇", "即时吸引力", "模型编造"]
+    }));
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({ emphases }) } }]
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  });
+
+  const first = await harness.send(emphasisMessage("first", "same-emphasis"));
+  const second = await harness.send(emphasisMessage("second", "same-emphasis"));
+
+  assert.equal(first.ok, true, JSON.stringify(first));
+  assert.deepEqual(first.emphasis.phrases, ["强烈好奇", "即时吸引力"]);
+  assert.equal(first.emphasis.cacheHit, false);
+  assert.equal(second.emphasis.cacheHit, true);
+  assert.equal(calls, 1);
 });
 
 test("background keeps non-model overhead inside the one-second budget", async () => {

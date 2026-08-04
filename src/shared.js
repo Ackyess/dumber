@@ -19,6 +19,8 @@
   const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
   const PROMPT_VERSION = "curator-2026-08-04-v6";
+  const EMPHASIS_PROMPT_VERSION = "emphasis-2026-08-04-v1";
+  const PIPELINE_PROMPT_VERSION = `${PROMPT_VERSION}+${EMPHASIS_PROMPT_VERSION}`;
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
   const VISUAL_SLA_MS = 1000;
   const CANDIDATE_MIN_DOPAMINE = 0.2;
@@ -260,6 +262,27 @@
       });
     }
     return normalized;
+  }
+
+  function normalizeEmphasis(payload, sourceTextValue = "") {
+    const sourceText = normalizeMultilineText(sourceTextValue);
+    const sourceLower = sourceText.toLowerCase();
+    const phrases = [];
+    for (const raw of Array.isArray(payload?.phrases) ? payload.phrases : []) {
+      const phrase = normalizeText(raw);
+      if (phrase.length < 2 || phrase.length > 40) continue;
+      let exact = phrase;
+      if (sourceText) {
+        let index = sourceText.indexOf(phrase);
+        if (index < 0) index = sourceLower.indexOf(phrase.toLowerCase());
+        if (index < 0) continue;
+        exact = sourceText.slice(index, index + phrase.length);
+      }
+      if (phrases.some((item) => item.toLowerCase() === exact.toLowerCase())) continue;
+      phrases.push(exact);
+      if (phrases.length >= 5) break;
+    }
+    return { phrases };
   }
 
   function createNeutralCuration(id) {
@@ -544,10 +567,12 @@
     DEFAULT_SETTINGS,
     DRIVER_KEYS,
     DRIVER_LABELS,
+    EMPHASIS_PROMPT_VERSION,
     EXTRACTOR_VERSION,
     LEGACY_CACHE_KEYS,
     METRICS_KEY,
     METRICS_SCHEMA_VERSION,
+    PIPELINE_PROMPT_VERSION,
     PROFILE_KEY,
     PROFILE_SCHEMA_VERSION,
     PROMPT_VERSION,
@@ -571,6 +596,7 @@
     normalizeApiUrl,
     normalizeCurations,
     normalizeDriver,
+    normalizeEmphasis,
     normalizeMetrics,
     normalizeMultilineText,
     normalizeProfile,

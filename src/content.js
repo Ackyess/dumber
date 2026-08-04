@@ -17,6 +17,8 @@
   const cardRecords = new WeakMap();
   const pending = new Map();
   const memoryCurations = new Map();
+  const memoryEmphases = new Map();
+  const activeEmphases = new Map();
   const reportedDecisions = new Set();
   const metricEvents = [];
   const MAX_CARD_RETRIES = 1;
@@ -132,6 +134,7 @@
     metricsTimer = 0;
     navigationTimer = 0;
     pending.clear();
+    activeEmphases.clear();
     dirtyRoots.clear();
     intersection.disconnect();
     visibilityObserver.disconnect();
@@ -436,6 +439,7 @@
       record.errorAt = 0;
       record.retryCount = 0;
       card.dataset.dumberState = "promoted";
+      queueEmphasis(candidate);
     } else {
       renderer.unmark(card);
       record.state = "ready";
@@ -471,6 +475,79 @@
     }
   }
 
+  function queueEmphasis(candidate) {
+    const card = candidate.card;
+    const record = cardRecords.get(card);
+    if (!card?.isConnected
+      || record?.state !== "promoted"
+      || record.candidate.fingerprint !== candidate.fingerprint) return;
+
+    candidate = record.candidate;
+    const epoch = runtimeEpoch;
+    const signature = modelSignature(settings);
+    const key = memoryKey(candidate.fingerprint, signature);
+    const remembered = memoryEmphases.get(key);
+    if (remembered) {
+      applyEmphasis(candidate, remembered, epoch, signature);
+      return;
+    }
+
+    card.dataset.dumberEnhancement = "requesting";
+    let request = activeEmphases.get(key);
+    if (!request) {
+      request = chrome.runtime.sendMessage({
+        type: "emphasize",
+        extractorVersion: Shared.EXTRACTOR_VERSION,
+        item: {
+          id: candidate.id,
+          hash: candidate.hash,
+          context: { text: candidate.context.text }
+        }
+      }).then((response) => {
+        if (!response?.ok) throw new Error(response?.error || "文案强化请求失败");
+        return Shared.normalizeEmphasis(response.emphasis, candidate.context.text);
+      });
+      activeEmphases.set(key, request);
+      request.then(
+        () => { if (activeEmphases.get(key) === request) activeEmphases.delete(key); },
+        () => { if (activeEmphases.get(key) === request) activeEmphases.delete(key); }
+      );
+    }
+
+    void request.then((emphasis) => {
+      if (!isCurrentRequest(epoch, signature)) return;
+      rememberEmphasis(candidate.fingerprint, emphasis, signature);
+      applyEmphasis(candidate, emphasis, epoch, signature);
+    }).catch((error) => {
+      if (!isCurrentRequest(epoch, signature)) return;
+      const current = cardRecords.get(card);
+      if (current?.state === "promoted" && current.candidate.fingerprint === candidate.fingerprint) {
+        card.dataset.dumberEnhancement = "error";
+      }
+      console.debug("[DUMBER] 文案强化请求失败", error?.message || error);
+    });
+  }
+
+  function applyEmphasis(candidate, emphasis, epoch, signature) {
+    if (!isCurrentRequest(epoch, signature)) return;
+    const card = candidate.card;
+    const record = cardRecords.get(card);
+    if (!card?.isConnected
+      || record?.state !== "promoted"
+      || record.candidate.fingerprint !== candidate.fingerprint) return;
+    renderer.emphasize(card, record.candidate, emphasis);
+    card.dataset.dumberEnhancement = "ready";
+  }
+
+  function rememberEmphasis(fingerprint, emphasis, signature = modelSignature(settings)) {
+    const key = memoryKey(fingerprint, signature);
+    memoryEmphases.delete(key);
+    memoryEmphases.set(key, emphasis);
+    if (memoryEmphases.size > 1000) {
+      memoryEmphases.delete(memoryEmphases.keys().next().value);
+    }
+  }
+
   function reevaluateAll() {
     for (const card of trackedCards) {
       if (!card.isConnected) continue;
@@ -484,6 +561,7 @@
   function resetForModelChange() {
     runtimeEpoch += 1;
     pending.clear();
+    activeEmphases.clear();
     intersection.disconnect();
     reportedDecisions.clear();
     for (const card of trackedCards) {
@@ -594,6 +672,7 @@
     if (!card?.dataset) return;
     delete card.dataset.dumberFingerprint;
     delete card.dataset.dumberState;
+    delete card.dataset.dumberEnhancement;
     cardRecords.delete(card);
     renderer.syncActivity();
   }
@@ -625,7 +704,7 @@
     return Shared.hashText(Shared.stableStringify({
       apiBaseUrl: sanitized.apiBaseUrl,
       model: sanitized.model,
-      promptVersion: Shared.PROMPT_VERSION,
+      promptVersion: Shared.PIPELINE_PROMPT_VERSION,
       extractorVersion: Shared.EXTRACTOR_VERSION
     }));
   }
@@ -655,7 +734,8 @@
     if (!sameElementSet(previous?.expandableElements, next?.expandableElements)) return true;
     return !elementsCarryClass(next?.primaryElements, "dumber-primary")
       || !elementsCarryClass(next?.secondaryElements, "dumber-secondary")
-      || !elementsCarryClass(next?.expandableElements, "dumber-expanded");
+      || !elementsCarryClass(next?.expandableElements, "dumber-expanded")
+      || renderer.emphasisNeedsRepair(card);
   }
 
   function sameStableIdentity(left, right) {

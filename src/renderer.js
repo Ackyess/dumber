@@ -23,8 +23,8 @@
       border-radius: var(--dumber-radius) !important;
       background-color: var(--dumber-surface) !important;
       box-shadow:
-        0 0 0 1px rgba(255, 255, 255, .34),
-        0 0 26px rgba(156, 113, 255, .22),
+        0 0 0 1px rgba(255, 92, 124, .48),
+        0 0 34px rgba(255, 45, 85, .34),
         0 18px 48px rgba(18, 14, 36, .12) !important;
     }
 
@@ -34,16 +34,16 @@
       inset: 0;
       z-index: 2;
       box-sizing: border-box;
-      padding: 2px;
+      padding: 3px;
       border-radius: inherit;
       background: conic-gradient(
           from var(--dumber-angle),
-          #8fffd8,
-          #80c8ff,
-          #b98cff,
-          #ff87bb,
-          #ffe06f,
-          #8fffd8
+          #ff2d55,
+          #ff7a1a,
+          #ffd166,
+          #ff3d8d,
+          #a855f7,
+          #ff2d55
         );
       pointer-events: none;
       -webkit-mask:
@@ -54,21 +54,40 @@
     }
 
     .dumber-vip.dumber-ring-outline {
-      outline: 2px solid #b98cff !important;
-      outline-offset: -2px !important;
+      outline: 3px solid #ff2d55 !important;
+      outline-offset: -3px !important;
     }
 
     .dumber-vip:hover,
     .dumber-vip:focus-within {
       box-shadow:
-        0 0 0 1px rgba(255, 255, 255, .48),
-        0 0 38px rgba(156, 113, 255, .31),
+        0 0 0 1px rgba(255, 116, 142, .62),
+        0 0 46px rgba(255, 45, 85, .43),
         0 22px 56px rgba(18, 14, 36, .16) !important;
     }
 
     .dumber-vip.dumber-primary,
     .dumber-vip .dumber-primary {
       color: var(--dumber-ink) !important;
+    }
+
+    .dumber-vip .dumber-emphasis {
+      position: relative;
+      z-index: 3;
+      display: inline-block;
+      margin: 0 -.03em;
+      padding: 0 .03em;
+      color: var(--dumber-emphasis-ink, #c9183b) !important;
+      background: linear-gradient(180deg, transparent 58%, rgba(255, 45, 85, .2) 58%);
+      border-radius: .2em;
+      line-height: inherit;
+      text-shadow: 0 0 8px rgba(255, 45, 85, .44), 0 0 18px rgba(255, 122, 26, .22);
+      transform-origin: 50% 68%;
+      animation: dumber-emphasis-live 1700ms cubic-bezier(.45, 0, .25, 1) infinite;
+      animation-delay: var(--dumber-emphasis-delay, 0ms);
+      will-change: transform, filter, opacity;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
     }
 
     .dumber-vip.dumber-secondary,
@@ -248,12 +267,13 @@
       position: absolute;
       inset: 0 0 auto;
       height: 2px;
-      background: linear-gradient(90deg, #8fffd8, #80c8ff, #b98cff, #ff87bb, #ffe06f, #8fffd8);
+      background: linear-gradient(90deg, #ff2d55, #ff7a1a, #ffd166, #ff3d8d, #a855f7, #ff2d55);
       background-size: 200% 100%;
       opacity: .24;
     }
 
     .dumber-activity[data-phase="requesting"]::after,
+    .dumber-activity[data-phase="enhancing"]::after,
     .dumber-activity[data-phase="queued"]::after {
       opacity: 1;
       animation: dumber-activity-scan 1100ms linear infinite;
@@ -269,8 +289,8 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: conic-gradient(from 0deg, #8fffd8, #80c8ff, #b98cff, #ff87bb, #ffe06f, #8fffd8);
-      box-shadow: 0 0 14px rgba(143, 255, 216, .2);
+      background: conic-gradient(from 0deg, #ff2d55, #ff7a1a, #ffd166, #ff3d8d, #a855f7, #ff2d55);
+      box-shadow: 0 0 14px rgba(255, 45, 85, .24);
     }
 
     .dumber-activity-signal::after {
@@ -283,6 +303,7 @@
     }
 
     .dumber-activity[data-phase="requesting"] .dumber-activity-signal,
+    .dumber-activity[data-phase="enhancing"] .dumber-activity-signal,
     .dumber-activity[data-phase="queued"] .dumber-activity-signal {
       animation: dumber-activity-spin 950ms linear infinite;
     }
@@ -327,11 +348,26 @@
       to { background-position: -200% 0; }
     }
 
+    @keyframes dumber-emphasis-live {
+      0%, 100% { transform: translate(0, 0) scale(1.05) rotate(-.15deg); filter: brightness(1); opacity: 1; }
+      18% { transform: translate(-.8px, -1.2px) scale(1.18) rotate(-1deg); filter: brightness(1.18) saturate(1.15); opacity: 1; }
+      36% { transform: translate(.9px, .5px) scale(1.1) rotate(.85deg); filter: brightness(1); opacity: .96; }
+      49% { transform: translate(0, 0) scale(1.07) rotate(0); filter: brightness(1.5) saturate(1.32); opacity: .78; }
+      68% { transform: translate(-.5px, .8px) scale(1.15) rotate(-.65deg); filter: brightness(1.12); opacity: 1; }
+      84% { transform: translate(.45px, -.6px) scale(1.09) rotate(.45deg); filter: brightness(1); opacity: .94; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .dumber-sidecar { transition: opacity 80ms linear, visibility 0s linear 80ms; transform: none; }
       .dumber-activity,
       .dumber-activity::after,
       .dumber-activity-signal { animation: none !important; transition: none !important; }
+      .dumber-emphasis {
+        animation: none !important;
+        transform: scale(1.08);
+        filter: none;
+        opacity: 1;
+      }
     }
 
     @media (max-width: 520px) {
@@ -385,7 +421,7 @@
     activityObserver.observe(doc.documentElement, {
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-dumber-state"]
+      attributeFilter: ["data-dumber-state", "data-dumber-enhancement"]
     });
     syncActivity();
     const celebration = sidecar.querySelector(".dumber-celebration");
@@ -429,6 +465,8 @@
       const secondaryElements = uniqueConnected(candidate.secondaryElements, card)
         .filter((element) => !primaryElements.includes(element));
       const previous = records.get(card);
+      const reuseEmphasis = sameElementSet(previous?.primaryElements, primaryElements);
+      if (previous && !reuseEmphasis) clearEmphasis(previous, card);
 
       reconcileClass(previous?.primaryElements, primaryElements, "dumber-primary");
       reconcileClass(previous?.secondaryElements, secondaryElements, "dumber-secondary");
@@ -441,14 +479,23 @@
       card.dataset.dumberPromotionLabel = curation.promotionLabel || Shared.DRIVER_LABELS[curation.primaryDriver];
       card.style.setProperty("--dumber-surface", dark ? "rgba(17, 18, 24, .985)" : "rgba(250, 250, 253, .985)");
       card.style.setProperty("--dumber-ink", dark ? "#f7f8fb" : "#11131a");
+      card.style.setProperty("--dumber-emphasis-ink", dark ? "#ff6b88" : "#c9183b");
       card.style.setProperty("--dumber-radius", computed?.borderRadius && computed.borderRadius !== "0px" ? computed.borderRadius : "16px");
 
-      const payload = { candidate, curation, decision };
+      const payload = {
+        candidate,
+        curation,
+        decision,
+        emphasisCount: reuseEmphasis ? previous?.payload?.emphasisCount || 0 : 0
+      };
       const record = {
         primaryElements,
         secondaryElements,
         expandableElements: [],
         payload,
+        emphasisApplied: reuseEmphasis && previous?.emphasisApplied === true,
+        emphasisPhrases: reuseEmphasis ? previous?.emphasisPhrases || [] : [],
+        emphasisSpans: reuseEmphasis ? previous?.emphasisSpans || [] : [],
         spectrumAnimation: previous?.spectrumAnimation || null
       };
       records.set(card, record);
@@ -457,17 +504,73 @@
       if (activeCard === card) show(card, payload);
     }
 
+    function emphasize(card, candidate, emphasis) {
+      const record = records.get(card);
+      if (!record || !card?.isConnected) return 0;
+      const phrases = Shared.normalizeEmphasis(emphasis, candidate?.context?.text).phrases;
+      const reusable = record.emphasisApplied
+        && sameStringArray(record.emphasisPhrases, phrases)
+        && record.emphasisSpans.every((span) => span.isConnected && span.classList.contains("dumber-emphasis"));
+      if (!reusable) {
+        clearEmphasis(record, card);
+        const spans = [];
+        for (const element of record.primaryElements) {
+          spans.push(...wrapExactPhrases(element, phrases, doc, 8 - spans.length));
+          if (spans.length >= 8) break;
+        }
+        spans.forEach((span, index) => {
+          span.style.setProperty("--dumber-emphasis-delay", `${-(index * 173)}ms`);
+        });
+        record.emphasisApplied = true;
+        record.emphasisPhrases = phrases;
+        record.emphasisSpans = spans;
+      }
+      const count = record.emphasisSpans.filter((span) => span.isConnected).length;
+      record.payload.emphasisCount = count;
+      card.dataset.dumberEmphasisCount = String(count);
+      if (activeCard === card) show(card, record.payload);
+      return count;
+    }
+
+    function clearEmphasis(record, card) {
+      const parents = new Set();
+      for (const span of record?.emphasisSpans || []) {
+        const parent = span.parentNode;
+        if (!parent || !span.classList?.contains("dumber-emphasis")) continue;
+        parents.add(parent);
+        span.replaceWith(doc.createTextNode(span.textContent || ""));
+      }
+      for (const parent of parents) parent.normalize?.();
+      if (record) {
+        record.emphasisApplied = false;
+        record.emphasisPhrases = [];
+        record.emphasisSpans = [];
+        if (record.payload) record.payload.emphasisCount = 0;
+      }
+      if (card?.dataset) delete card.dataset.dumberEmphasisCount;
+    }
+
+    function emphasisNeedsRepair(card) {
+      const record = records.get(card);
+      return Boolean(record?.emphasisApplied
+        && record.emphasisSpans.length
+        && record.emphasisSpans.some((span) => !span.isConnected || !span.classList.contains("dumber-emphasis")));
+    }
+
     function unmark(card, options = {}) {
       const record = records.get(card);
+      clearEmphasis(record, card);
       card?.classList?.remove("dumber-vip");
       card?.classList?.remove("dumber-ring-contained");
       card?.classList?.remove("dumber-ring-outline");
       if (card?.dataset) {
         delete card.dataset.dumberPromotion;
         delete card.dataset.dumberPromotionLabel;
+        delete card.dataset.dumberEnhancement;
       }
       card?.style?.removeProperty("--dumber-surface");
       card?.style?.removeProperty("--dumber-ink");
+      card?.style?.removeProperty("--dumber-emphasis-ink");
       card?.style?.removeProperty("--dumber-radius");
       card?.style?.removeProperty("--dumber-angle");
       for (const element of record?.primaryElements || []) element.classList?.remove("dumber-primary");
@@ -493,19 +596,19 @@
       try {
         const frames = card.classList.contains("dumber-ring-outline")
           ? [
-              { outlineColor: "#8fffd8" },
-              { outlineColor: "#80c8ff" },
-              { outlineColor: "#b98cff" },
-              { outlineColor: "#ff87bb" },
-              { outlineColor: "#ffe06f" },
-              { outlineColor: "#8fffd8" }
+              { outlineColor: "#ff2d55" },
+              { outlineColor: "#ff7a1a" },
+              { outlineColor: "#ffd166" },
+              { outlineColor: "#ff3d8d" },
+              { outlineColor: "#a855f7" },
+              { outlineColor: "#ff2d55" }
             ]
           : [
               { "--dumber-angle": "0deg" },
               { "--dumber-angle": "360deg" }
             ];
         record.spectrumAnimation = card.animate(frames, {
-          duration: 14000,
+          duration: 7600,
           easing: "linear",
           iterations: Infinity
         });
@@ -537,9 +640,13 @@
 
     function syncActivity() {
       const counts = { observing: 0, queued: 0, requesting: 0, ready: 0, promoted: 0, error: 0 };
+      let enhancing = 0;
+      let enhancementErrors = 0;
       for (const card of doc.querySelectorAll("[data-dumber-state]")) {
         const state = card.dataset.dumberState;
         if (Object.hasOwn(counts, state)) counts[state] += 1;
+        if (card.dataset.dumberEnhancement === "requesting") enhancing += 1;
+        if (card.dataset.dumberEnhancement === "error") enhancementErrors += 1;
       }
       const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
       activity.hidden = total === 0;
@@ -553,6 +660,10 @@
         phase = "requesting";
         title = "AI 分析中";
         detail = `${counts.requesting} 条处理中 · ${completed} 条已处理`;
+      } else if (enhancing) {
+        phase = "enhancing";
+        title = "AI 正在强化文案";
+        detail = `${enhancing} 条二次处理中 · ${counts.promoted} 条已精选`;
       } else if (counts.queued) {
         phase = "queued";
         title = "等待 AI 分析";
@@ -565,6 +676,10 @@
         phase = "error";
         title = "AI 暂时没响应";
         detail = `${counts.error} 条等待重试 · ${completed} 条已处理`;
+      } else if (enhancementErrors) {
+        phase = "error";
+        title = "文案强化未完成";
+        detail = `${enhancementErrors} 条保留首轮精选样式`;
       }
       activity.dataset.phase = phase;
       if (activityLabel.textContent !== title) activityLabel.textContent = title;
@@ -628,7 +743,9 @@
       const driver = Shared.normalizeDriver(payload.curation.primaryDriver);
       label.textContent = payload.curation.promotionLabel || Shared.DRIVER_LABELS[driver];
       copy.textContent = DRIVER_COPY[driver] || DRIVER_COPY.mixed;
-      score.textContent = `本次推荐强度 ${Math.round(payload.decision.adjustedScore * 100)}%`;
+      score.textContent = `本次推荐强度 ${Math.round(payload.decision.adjustedScore * 100)}%${
+        payload.emphasisCount ? ` · ${payload.emphasisCount} 处已强化` : ""
+      }`;
       const visualHash = Shared.hashText(payload.candidate.fingerprint || payload.candidate.id);
       const index = parseInt(visualHash.slice(0, 8), 16) % CELEBRATIONS.length;
       celebration.textContent = CELEBRATIONS[index];
@@ -754,7 +871,15 @@
       activity.remove();
     }
 
-    return Object.freeze({ destroy, ensureStyles, mark, syncActivity: scheduleActivitySync, unmark });
+    return Object.freeze({
+      destroy,
+      emphasize,
+      emphasisNeedsRepair,
+      ensureStyles,
+      mark,
+      syncActivity: scheduleActivitySync,
+      unmark
+    });
   }
 
   function createSidecar(doc) {
@@ -809,6 +934,69 @@
       seen.add(element);
       return true;
     });
+  }
+
+  function wrapExactPhrases(rootElement, phraseValues, doc, limit = 8) {
+    if (!rootElement || limit <= 0) return [];
+    const phrases = [...new Set((phraseValues || []).filter(Boolean))]
+      .sort((left, right) => right.length - left.length)
+      .map((text) => ({ text, lower: text.toLowerCase() }));
+    if (!phrases.length) return [];
+
+    // ponytail: match inside individual host text nodes; use DOM Range only if X proves cross-node phrases common.
+    const walker = doc.createTreeWalker(rootElement, 4);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    const spans = [];
+
+    for (const node of textNodes) {
+      if (spans.length >= limit || !node.parentNode || node.parentElement?.closest?.(".dumber-emphasis")) continue;
+      const text = node.nodeValue || "";
+      const lower = text.toLowerCase();
+      const matches = [];
+      let cursor = 0;
+      while (cursor < text.length && spans.length + matches.length < limit) {
+        let best = null;
+        for (const phrase of phrases) {
+          const index = lower.indexOf(phrase.lower, cursor);
+          if (index < 0) continue;
+          if (!best || index < best.index || (index === best.index && phrase.text.length > best.length)) {
+            best = { index, length: phrase.text.length };
+          }
+        }
+        if (!best) break;
+        matches.push(best);
+        cursor = best.index + best.length;
+      }
+      if (!matches.length) continue;
+
+      const fragment = doc.createDocumentFragment();
+      cursor = 0;
+      for (const match of matches) {
+        if (match.index > cursor) fragment.append(doc.createTextNode(text.slice(cursor, match.index)));
+        const span = doc.createElement("span");
+        span.className = "dumber-emphasis";
+        span.dataset.dumberOwned = "";
+        span.textContent = text.slice(match.index, match.index + match.length);
+        fragment.append(span);
+        spans.push(span);
+        cursor = match.index + match.length;
+      }
+      if (cursor < text.length) fragment.append(doc.createTextNode(text.slice(cursor)));
+      node.replaceWith(fragment);
+    }
+    return spans;
+  }
+
+  function sameElementSet(left, right) {
+    const leftSet = new Set(left || []);
+    const rightSet = new Set(right || []);
+    return leftSet.size === rightSet.size && [...leftSet].every((element) => rightSet.has(element));
+  }
+
+  function sameStringArray(left, right) {
+    return (left || []).length === (right || []).length
+      && (left || []).every((value, index) => value === right[index]);
   }
 
   function reconcileClass(previousElements, nextElements, className) {

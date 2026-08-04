@@ -41,6 +41,28 @@ test("uses non-thinking JSON output for DeepSeek Flash", () => {
   assert.equal(generic.response_format.type, "json_schema");
 });
 
+test("builds and parses exact-phrase second-stage output", () => {
+  const items = [{
+    id: "item-1",
+    context: { text: "这个惊人结论让所有人彻底疯狂", quoteText: "不应发送" }
+  }];
+  const payload = Curator.createEmphasisRequestPayload(settings, items);
+  const request = JSON.parse(payload.messages[1].content);
+  assert.deepEqual(request.items, [{ id: "item-1", text: "这个惊人结论让所有人彻底疯狂" }]);
+  assert.equal(payload.response_format.json_schema.name, "dumber_emphases");
+
+  const result = Curator.parseEmphasisResponse({
+    choices: [{
+      message: {
+        content: JSON.stringify({
+          emphases: [{ id: "item-1", phrases: ["惊人结论", "彻底疯狂", "模型编造"] }]
+        })
+      }
+    }]
+  }, items);
+  assert.deepEqual(result, [{ id: "item-1", phrases: ["惊人结论", "彻底疯狂"] }]);
+});
+
 test("caps model context and omits non-semantic fields", () => {
   const payload = Curator.createRequestPayload(settings, [{
     id: "item-1",

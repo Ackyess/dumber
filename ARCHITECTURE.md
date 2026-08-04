@@ -35,8 +35,8 @@
 
 `src/curator.js` 包含：
 
-- 固定版本的 system prompt；
-- 严格 JSON Schema；
+- 首轮策展与二轮原文短语强化的独立、固定版本 system prompt；
+- 两套严格 JSON Schema；
 - API payload 构造；
 - JSON fenced/plain 响应解析；
 - 可测试的单飞批处理器。
@@ -44,6 +44,8 @@
 模型看到的是经过裁剪的 X context，而不是宿主页面 HTML：正文最多 700 字，引用最多 280 字，并移除 canonical URL 等无关字段。提示词明确把输入当作不可信引用内容，阻止 prompt injection。模型只返回判定字段，正向 UI 标签由本地 driver 映射生成。协议中的 `promote` 只保留用于兼容；共享层根据 `dopamineScore` 与 `durableValue` 确定性生成宽候选，再由本地严格度决定最终推广。
 
 当前适配器与模型协议是纯文本链路。图片、视频、音频、字幕和媒体 URL 不进入 context；缺少推文正文的纯媒体卡片不会创建判定请求。
+
+第二阶段只在本地最终判定为推广后启动。模型最多返回 5 个正文原文短语；共享层再次核对短语确实逐字存在，拒绝任何改写或幻觉内容。第二阶段不参与首轮判定，也不能延迟或撤销首轮视觉结果。
 
 每个批次必须返回全部请求 ID。缺少任意条目时整批失败并进入受控重试流程，不会把缺项静默转换为长期缓存的中性结果。旧的 `verdicts/items` 响应容器不再被接受。
 
@@ -53,12 +55,12 @@
 
 ### 4.1 单飞
 
-所有内容脚本请求进入同一个 `createSingleFlightBatcher`：
+内容脚本请求进入两个复用 `createSingleFlightBatcher` 的独立队列：首轮策展零等待，二轮强化短暂聚合。每条队列内部：
 
 - pending 与 active 都以版本化 cache key 去重；
 - 执行期间到达的同键请求会加入既有 waiter，而不是创建第二次模型调用；
 - 同组配置最多合并 8 条；
-- worker 全局只允许一个活跃批次；
+- worker 只允许一个活跃批次；两阶段最多各有一个活动批次；
 - 下一批只有在上一批结束后才开始。
 
 ### 4.2 网络策略
@@ -81,7 +83,7 @@
 缓存条目不含原始文本：
 
 ```text
-cacheKey -> { curation, at }
+cacheKey -> { curation, emphasis, at }
 ```
 
 `cacheKey` 绑定：
@@ -124,6 +126,8 @@ content fingerprint
 ```text
 observing → queued → requesting → promoted | ready
                                ↘ error → one delayed retry
+
+promoted → enhancement requesting → enhancement ready | enhancement error
 ```
 
 关键约束：
@@ -138,6 +142,7 @@ observing → queued → requesting → promoted | ready
 - 每个运行 generation 只允许一个活跃消息批次；模型切换可启动新 generation，而旧响应只能被丢弃；
 - URL 轮询与 MutationObserver 一起覆盖 SPA 导航；
 - X 私信路径不会激活内容运行时。
+- `promoted` 写入后立即渲染首轮边框，再异步请求文案强化；二轮错误只更新可见状态，首轮样式保持不变。
 
 视觉延迟从卡片第一次进入真实视口开始计时；若判定在屏外预取阶段完成，记录为 0ms。目标 SLA 为 p95 小于 1000ms。
 
@@ -147,13 +152,14 @@ observing → queued → requesting → promoted | ready
 
 卡片本体：
 
-- 已定位卡片使用绝对定位伪元素形成虹彩边缘；静态卡片使用不占空间的 outline 色相动画，均不增加 border、不改变定位上下文或盒模型；
+- 已定位卡片使用绝对定位伪元素形成红向虹彩边缘；静态卡片使用不占空间的 outline 色相动画，均不增加 border、不改变定位上下文或盒模型；
 - 不在正文上方放置半透明覆盖层；
 - 虹彩使用独立 Web Animations 动画更新自定义属性，不覆盖宿主 CSS `animation`；
 - 主要元素只提升颜色对比度，不改字号、字重、行距、换行或文字尺寸；
 - 次要元素仅降低视觉权重；
 - 不主动取消宿主的 line clamp 或截断，避免异步标记触发布局重排；
 - reduced-motion 停止角度动画。
+- 二轮短语只包裹原有文本节点，使用 transform、filter 与 opacity 做错峰放大、轻摆和亮度脉冲；reduced-motion 下保留静态强调。
 
 sidecar：
 
@@ -168,7 +174,7 @@ sidecar：
 
 ## 8. 数据最小化
 
-发送给模型：进入视口卡片的有限可见 context。
+发送给模型：进入视口卡片的有限可见 context；最终命中后，正文会再发送一次用于选择原文强化短语。
 
 保存在本地：
 

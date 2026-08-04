@@ -50,6 +50,7 @@ def create_fixture_page(
     configured: bool = True,
     top_offset: int = 42,
     curate_delay_ms: int = 0,
+    emphasis_delay_ms: int = 0,
 ) -> Page:
     page = browser.new_page(viewport={"width": 1280, "height": 800})
     page.set_content(
@@ -82,7 +83,7 @@ def create_fixture_page(
 
     page.evaluate(
         """
-        ({ platform, configured, curateDelayMs }) => {
+        ({ platform, configured, curateDelayMs, emphasisDelayMs }) => {
           let settings = {
             schemaVersion: 2,
             enabled: true,
@@ -110,8 +111,16 @@ def create_fixture_page(
               ...overrides
             }))
           });
+          const buildEmphasisResponse = () => ({
+            ok: true,
+            emphasis: {
+              phrases: ["惊人结论", "绝对想不到"],
+              cacheHit: false
+            }
+          });
           window.__dumberTest = {
             curateCalls: 0,
+            emphasisCalls: 0,
             preferences: [],
             events: [],
             deferCurate: false,
@@ -143,6 +152,13 @@ def create_fixture_page(
                     });
                   }
                   return buildResponse(message);
+                }
+                if (message.type === "emphasize") {
+                  window.__dumberTest.emphasisCalls += 1;
+                  if (emphasisDelayMs) {
+                    await new Promise((resolve) => setTimeout(resolve, emphasisDelayMs));
+                  }
+                  return buildEmphasisResponse();
                 }
                 if (message.type === "preferenceAction") {
                   window.__dumberTest.preferences.push(message.action);
@@ -192,6 +208,7 @@ def create_fixture_page(
             "platform": platform,
             "configured": configured,
             "curateDelayMs": curate_delay_ms,
+            "emphasisDelayMs": emphasis_delay_ms,
         },
     )
 
@@ -211,7 +228,7 @@ def run() -> None:
             launch_options["executable_path"] = str(system_chromium)
         browser = playwright.chromium.launch(**launch_options)
 
-        page = create_fixture_page(browser, "x", configured=False)
+        page = create_fixture_page(browser, "x", configured=False, emphasis_delay_ms=450)
         page.wait_for_timeout(120)
         assert page.evaluate("window.__dumberTest.curateCalls") == 0
         assert page.locator("[data-dumber-state]").count() == 0
@@ -251,12 +268,24 @@ def run() -> None:
         ) == "none"
         page.evaluate("window.__dumberTest.resolveDeferred(); window.__dumberTest.deferCurate = false")
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.locator('.dumber-activity[data-phase="enhancing"]').wait_for(state="visible")
+        assert "AI 正在强化文案" in page.locator(".dumber-activity").inner_text()
+        assert page.locator(".dumber-emphasis").count() == 0
+        assert page.evaluate("window.__dumberTest.emphasisCalls") == 1
+        layout_phase_one = page.locator("article").evaluate(layout_probe)
+        assert layout_phase_one == layout_before
+        page.locator(".dumber-emphasis").first.wait_for(state="visible")
         page.wait_for_function(
             "document.querySelector('.dumber-activity').dataset.phase === 'idle'"
         )
         assert "1 条已处理" in page.locator(".dumber-activity").inner_text()
         layout_after = page.locator("article").evaluate(layout_probe)
         assert layout_after == layout_before
+        assert page.locator(".dumber-emphasis").count() == 2
+        assert page.locator(".dumber-emphasis").first.evaluate(
+            "element => getComputedStyle(element).animationName"
+        ) == "none"
+        assert page.locator('[data-testid="tweetText"]').inner_text() == "所有人都在讨论的惊人结论：你绝对想不到最后发生了什么。"
         assert page.locator("article.dumber-ring-outline").count() == 1
         assert page.locator(".dumber-expanded").count() == 0
         assert page.evaluate("window.__dumberTest.curateCalls") == 1
@@ -285,6 +314,10 @@ def run() -> None:
 
         page = create_fixture_page(browser, "x")
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.locator(".dumber-emphasis").first.wait_for(state="visible")
+        assert page.locator(".dumber-emphasis").first.evaluate(
+            "element => getComputedStyle(element).animationName"
+        ) == "dumber-emphasis-live"
         assert page.locator("article.dumber-ring-contained").count() == 1
         assert page.locator("article").evaluate(
             "element => getComputedStyle(element, '::before').content"
@@ -318,6 +351,7 @@ def run() -> None:
         page.wait_for_function(
             "document.querySelector('[data-testid=tweetText]').classList.contains('dumber-primary')"
         )
+        page.locator(".dumber-emphasis").first.wait_for(state="visible")
         assert page.evaluate("window.__dumberTest.curateCalls") == calls_before_repair
 
         page.evaluate("window.__dumberTest.deferCurate = true")
@@ -364,10 +398,12 @@ def run() -> None:
 
         page = create_fixture_page(browser, "x")
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.locator(".dumber-emphasis").first.wait_for(state="visible")
         page.locator("article.dumber-vip").hover()
         page.locator(".dumber-sidecar-visible").wait_for(state="visible")
         page.locator('.dumber-sidecar button[data-action="less"]').click()
         page.wait_for_function("!document.querySelector('article').classList.contains('dumber-vip')")
+        assert page.locator(".dumber-emphasis").count() == 0
         assert page.evaluate("window.__dumberTest.preferences") == ["less"]
         page.close()
 
