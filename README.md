@@ -2,7 +2,7 @@
 
 DUMBER 是一个 Chrome Manifest V3 扩展。它不是过滤器、警告器或数字健康工具，而是一位真诚挑选、优化并推广高刺激、低持久价值内容的 AI 策展人。
 
-当前版本：`0.3.7`
+当前版本：`0.3.8`
 
 ## 运行时体验
 
@@ -214,10 +214,10 @@ npm run package
 输出：
 
 ```text
-dist/dumber-0.3.7.zip
-dist/dumber-0.3.7.zip.sha256
-dist/dumber-0.3.7-source.zip
-dist/dumber-0.3.7-source.zip.sha256
+dist/dumber-0.3.8.zip
+dist/dumber-0.3.8.zip.sha256
+dist/dumber-0.3.8-source.zip
+dist/dumber-0.3.8-source.zip.sha256
 ```
 
 打包器使用固定文件顺序、固定时间戳、无压缩存储和固定文件元数据。可以通过 `SOURCE_DATE_EPOCH` 覆盖时间戳。安装包只包含扩展运行所需文件和核心说明；源码包包含测试、评测工具、CI 与开发文档。

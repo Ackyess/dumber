@@ -1,6 +1,6 @@
 # Roadmap Implementation Status
 
-本文件记录 0.3.7 对 `ROADMAP.md` 的实现覆盖，不修改路线图本身的验收定义。
+本文件记录 0.3.8 对 `ROADMAP.md` 的实现覆盖，不修改路线图本身的验收定义。
 
 ## v0.2 — 运行时重置与稳定性
 
@@ -83,7 +83,7 @@
 
 - BYOK；
 - 无源码秘密信息；
-- 原创 icon，移除第三方 meme；
+- 本地多尺寸 icon，移除运行时第三方 meme；
 - 单元测试、DOM fixture、Chromium smoke test；
 - 后台 service worker VM 测试与运行代际竞态回归；
 - GitHub Actions；
