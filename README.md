@@ -2,19 +2,19 @@
 
 DUMBER 是一个 Chrome Manifest V3 扩展。它不是过滤器、警告器或数字健康工具，而是一位真诚挑选、优化并推广高刺激、低持久价值内容的 AI 策展人。
 
-当前版本：`0.3.11`
+当前版本：`0.3.12`
 
 ## 运行时体验
 
 DUMBER 会读取进入视口的 X 内容卡片，把可见上下文发送到用户自行配置的 OpenAI-compatible Chat Completions 接口。模型返回结构化策展结果后，命中内容会被升级为 VIP 阅读卡片：
 
-- 首轮命中后立即出现高亮 Beam 虹彩边缘：整圈保留原版青、蓝、紫、粉、黄，同时有局部光束沿边缘掠过；
+- 首轮命中后立即出现 Beam 虹彩光带：透明到高亮的旋转遮罩让青、蓝、紫、粉、黄宽光带沿卡片内壁掠过，安静区域只保留细弱轮廓；
 - 独立的第二轮模型请求只从命中正文中选出 2–5 个原文爆点词，每个最多 12 个字符，并以错峰多色霓虹、放大、摆动和亮度脉冲强化；
 - 正文获得稳定、高对比度的阅读平面；
 - 保留 X 原有的字号、字重、行距、换行和卡片尺寸，不因标记触发布局重排；
 - 时间、播放量和次要按钮被适度弱化，但功能不被删除；
 - 全页面只维护一个 hover sidecar，自动停靠在卡片外侧；
-- 右下角使用霓虹点阵 Composing 球实时显示 `Scanning / Thinking / Composing / Ready / Retrying`；
+- 右下角使用霓虹点阵 Composing 球实时显示 `Scanning / Thinking / Composing / Ready / Retrying`，并在下一行持续显示本页会话的“已分析 / 已精选”数量；
 - 虹彩由独立的 Web Animations 动画驱动，不覆盖宿主卡片已有的 CSS 动画；
 - sidecar 使用正向标签、推荐强度和庆祝角色；
 - `更多这种 / 这条真有用` 会在本地调整后续推广并保存单条纠错；
@@ -227,10 +227,10 @@ npm run package
 输出：
 
 ```text
-dist/dumber-0.3.11.zip
-dist/dumber-0.3.11.zip.sha256
-dist/dumber-0.3.11-source.zip
-dist/dumber-0.3.11-source.zip.sha256
+dist/dumber-0.3.12.zip
+dist/dumber-0.3.12.zip.sha256
+dist/dumber-0.3.12-source.zip
+dist/dumber-0.3.12-source.zip.sha256
 ```
 
 打包器使用固定文件顺序、固定时间戳、无压缩存储和固定文件元数据。可以通过 `SOURCE_DATE_EPOCH` 覆盖时间戳。安装包只包含扩展运行所需文件和核心说明；源码包包含测试、评测工具、CI 与开发文档。

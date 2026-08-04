@@ -27,11 +27,11 @@
       --dumber-ink: #11131a;
       --dumber-radius: 16px;
       --dumber-beam-opacity: 0;
-      --dumber-beam-stroke: 1;
-      --dumber-beam-inner: .64;
-      --dumber-beam-bloom: .5;
-      --dumber-beam-brightness: 1.45;
-      --dumber-beam-saturation: 1.5;
+      --dumber-beam-stroke: .26;
+      --dumber-beam-inner: .42;
+      --dumber-beam-bloom: .24;
+      --dumber-beam-brightness: 1.3;
+      --dumber-beam-saturation: 1.2;
       --dumber-beam-shadow: rgba(255, 255, 255, .27);
       border-radius: var(--dumber-radius) !important;
       background-color: var(--dumber-surface) !important;
@@ -76,11 +76,11 @@
       -webkit-mask:
         conic-gradient(
           from var(--dumber-angle),
-          rgba(255, 255, 255, .7) 0%, rgba(255, 255, 255, .7) 30%,
-          rgba(255, 255, 255, .78) 36%, rgba(255, 255, 255, .9) 44%,
+          transparent 0%, transparent 30%,
+          rgba(255, 255, 255, .1) 36%, rgba(255, 255, 255, .35) 44%,
           white 52%, white 80%,
-          rgba(255, 255, 255, .9) 86%, rgba(255, 255, 255, .78) 92%,
-          rgba(255, 255, 255, .7) 95%, rgba(255, 255, 255, .7) 100%
+          rgba(255, 255, 255, .35) 86%, rgba(255, 255, 255, .1) 92%,
+          transparent 95%, transparent 100%
         ),
         linear-gradient(#000 0 0) content-box,
         linear-gradient(#000 0 0);
@@ -88,11 +88,11 @@
       mask:
         conic-gradient(
           from var(--dumber-angle),
-          rgba(255, 255, 255, .7) 0%, rgba(255, 255, 255, .7) 30%,
-          rgba(255, 255, 255, .78) 36%, rgba(255, 255, 255, .9) 44%,
+          transparent 0%, transparent 30%,
+          rgba(255, 255, 255, .1) 36%, rgba(255, 255, 255, .35) 44%,
           white 52%, white 80%,
-          rgba(255, 255, 255, .9) 86%, rgba(255, 255, 255, .78) 92%,
-          rgba(255, 255, 255, .7) 95%, rgba(255, 255, 255, .7) 100%
+          rgba(255, 255, 255, .35) 86%, rgba(255, 255, 255, .1) 92%,
+          transparent 95%, transparent 100%
         ),
         linear-gradient(#000 0 0) content-box,
         linear-gradient(#000 0 0);
@@ -120,12 +120,12 @@
         radial-gradient(ellipse 47px 43px at 100% 27.1%, rgba(180, 40, 240, .45), transparent);
       box-shadow: inset 0 0 9px 1px var(--dumber-beam-shadow);
       -webkit-mask-image:
-        conic-gradient(from var(--dumber-angle), rgba(255,255,255,.42) 0%, rgba(255,255,255,.42) 30%, rgba(255,255,255,.68) 44%, white 52%, white 80%, rgba(255,255,255,.68) 86%, rgba(255,255,255,.42) 100%),
+        conic-gradient(from var(--dumber-angle), transparent 0%, transparent 30%, rgba(255,255,255,.1) 36%, rgba(255,255,255,.35) 44%, white 52%, white 80%, rgba(255,255,255,.35) 86%, rgba(255,255,255,.1) 92%, transparent 95%, transparent 100%),
         linear-gradient(white, transparent 28px, transparent calc(100% - 28px), white),
         linear-gradient(to right, white, transparent 28px, transparent calc(100% - 28px), white);
       -webkit-mask-composite: source-in, source-over;
       mask-image:
-        conic-gradient(from var(--dumber-angle), rgba(255,255,255,.42) 0%, rgba(255,255,255,.42) 30%, rgba(255,255,255,.68) 44%, white 52%, white 80%, rgba(255,255,255,.68) 86%, rgba(255,255,255,.42) 100%),
+        conic-gradient(from var(--dumber-angle), transparent 0%, transparent 30%, rgba(255,255,255,.1) 36%, rgba(255,255,255,.35) 44%, white 52%, white 80%, rgba(255,255,255,.35) 86%, rgba(255,255,255,.1) 92%, transparent 95%, transparent 100%),
         linear-gradient(white, transparent 28px, transparent calc(100% - 28px), white),
         linear-gradient(to right, white, transparent 28px, transparent calc(100% - 28px), white);
       mask-composite: intersect, add;
@@ -415,7 +415,10 @@
 
     .dumber-activity-copy {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
       min-width: 0;
     }
 
@@ -448,15 +451,35 @@
     }
 
     .dumber-activity-detail {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
-      border: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(220, 224, 235, .62);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 14px;
+      letter-spacing: .015em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dumber-activity-metric strong {
+      color: transparent;
+      font: inherit;
+      font-weight: 750;
+      background: linear-gradient(90deg, #8fffd8, #80c8ff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 8px rgba(128, 200, 255, .2);
+    }
+
+    .dumber-activity-metric[data-kind="selected"] strong {
+      background-image: linear-gradient(90deg, #ff87bb, #ffe06f);
+      text-shadow: 0 0 8px rgba(255, 135, 187, .2);
+    }
+
+    .dumber-activity-separator {
+      color: rgba(220, 224, 235, .26);
     }
 
     @keyframes dumber-activity-shimmer {
@@ -539,6 +562,8 @@
     const records = new WeakMap();
     const hoveredFingerprints = new WeakMap();
     const markedCards = new Set();
+    const analyzedFingerprints = new Set();
+    const selectedFingerprints = new Set();
     const reducedMotion = win.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
     const beamObserver = typeof win.IntersectionObserver === "function"
       ? new win.IntersectionObserver((entries) => {
@@ -563,7 +588,8 @@
     const activity = createActivity(doc);
     const activityOrb = createActivityOrb(activity.querySelector(".dumber-activity-signal"), win, reducedMotion);
     const activityLabel = activity.querySelector(".dumber-activity-label");
-    const activityDetail = activity.querySelector(".dumber-activity-detail");
+    const activityAnalyzed = activity.querySelector("[data-dumber-activity-analyzed]");
+    const activitySelected = activity.querySelector("[data-dumber-activity-selected]");
     const activityObserver = new win.MutationObserver(scheduleActivitySync);
     activityObserver.observe(doc.documentElement, {
       subtree: true,
@@ -627,10 +653,10 @@
       card.style.setProperty("--dumber-surface", dark ? "rgba(17, 18, 24, .985)" : "rgba(250, 250, 253, .985)");
       card.style.setProperty("--dumber-ink", dark ? "#f7f8fb" : "#11131a");
       card.style.setProperty("--dumber-radius", computed?.borderRadius && computed.borderRadius !== "0px" ? computed.borderRadius : "16px");
-      card.style.setProperty("--dumber-beam-stroke", dark ? "1" : ".96");
-      card.style.setProperty("--dumber-beam-inner", dark ? ".64" : ".5");
-      card.style.setProperty("--dumber-beam-bloom", dark ? ".5" : ".4");
-      card.style.setProperty("--dumber-beam-saturation", dark ? "1.5" : "1.62");
+      card.style.setProperty("--dumber-beam-stroke", ".26");
+      card.style.setProperty("--dumber-beam-inner", ".42");
+      card.style.setProperty("--dumber-beam-bloom", ".24");
+      card.style.setProperty("--dumber-beam-saturation", "1.2");
       card.style.setProperty("--dumber-beam-shadow", dark ? "rgba(255, 255, 255, .27)" : "rgba(0, 0, 0, .14)");
 
       let beamBloom = previous?.beamBloom;
@@ -851,6 +877,11 @@
       for (const card of doc.querySelectorAll("[data-dumber-state]")) {
         const state = card.dataset.dumberState;
         if (Object.hasOwn(counts, state)) counts[state] += 1;
+        const fingerprint = card.dataset.dumberFingerprint;
+        if (fingerprint && (state === "ready" || state === "promoted")) {
+          analyzedFingerprints.add(fingerprint);
+          if (state === "promoted") selectedFingerprints.add(fingerprint);
+        }
         if (card.dataset.dumberEnhancement === "requesting") enhancing += 1;
         if (card.dataset.dumberEnhancement === "error") enhancementErrors += 1;
       }
@@ -861,42 +892,37 @@
         return;
       }
 
-      const completed = counts.ready + counts.promoted;
+      const completed = Math.max(analyzedFingerprints.size, counts.ready + counts.promoted);
+      const selected = Math.max(selectedFingerprints.size, counts.promoted);
       let phase = "idle";
       let title = "Ready….";
-      let detail = `${completed} 条已处理 · ${counts.promoted} 条精选`;
       if (counts.requesting) {
         phase = "requesting";
         title = "Thinking….";
-        detail = `${counts.requesting} 条处理中 · ${completed} 条已处理`;
       } else if (enhancing) {
         phase = "enhancing";
         title = "Composing….";
-        detail = `${enhancing} 条二次处理中 · ${counts.promoted} 条已精选`;
       } else if (counts.queued) {
         phase = "queued";
         title = "Queuing….";
-        detail = `${counts.queued} 条排队 · ${completed} 条已处理`;
       } else if (counts.observing) {
         phase = "observing";
         title = "Scanning….";
-        detail = `${counts.observing} 条已发现 · ${completed} 条已处理`;
       } else if (counts.error) {
         phase = "error";
         title = "Retrying….";
-        detail = `${counts.error} 条等待重试 · ${completed} 条已处理`;
       } else if (enhancementErrors) {
         phase = "error";
         title = "Paused….";
-        detail = `${enhancementErrors} 条保留首轮精选样式`;
       }
       activity.dataset.phase = phase;
       if (activityLabel.textContent !== title) {
         activityLabel.textContent = title;
         activityLabel.dataset.text = title;
       }
-      if (activityDetail.textContent !== detail) activityDetail.textContent = detail;
-      activity.setAttribute("aria-label", `${title} ${detail}`);
+      if (activityAnalyzed.textContent !== String(completed)) activityAnalyzed.textContent = String(completed);
+      if (activitySelected.textContent !== String(selected)) activitySelected.textContent = String(selected);
+      activity.setAttribute("aria-label", `${title} 已分析 ${completed} 条，已精选 ${selected} 条`);
       activityOrb.setActive(["observing", "queued", "requesting", "enhancing"].includes(phase));
     }
 
@@ -1136,7 +1162,11 @@
       <canvas class="dumber-activity-signal" width="64" height="64" role="img" aria-label="Composing orb"></canvas>
       <span class="dumber-activity-copy">
         <strong class="dumber-activity-label" data-text="Scanning….">Scanning….</strong>
-        <span class="dumber-activity-detail">等待发现内容</span>
+        <span class="dumber-activity-detail" aria-hidden="true">
+          <span class="dumber-activity-metric" data-kind="analyzed">已分析 <strong data-dumber-activity-analyzed>0</strong></span>
+          <span class="dumber-activity-separator">·</span>
+          <span class="dumber-activity-metric" data-kind="selected">已精选 <strong data-dumber-activity-selected>0</strong></span>
+        </span>
       </span>
     `;
     (doc.body || doc.documentElement).append(activity);

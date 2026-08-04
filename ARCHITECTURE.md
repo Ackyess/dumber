@@ -152,7 +152,7 @@ promoted → enhancement requesting → enhancement ready | enhancement error
 
 卡片本体：
 
-- 已定位卡片使用 Border Beam 的径向色场、角度遮罩、掠过高光和 bloom 形成青、蓝、紫、粉、黄强虹彩；静态卡片使用不占空间的 outline 色相动画，均不增加 border、不改变定位上下文或盒模型；
+- 已定位卡片使用 Border Beam 原作透明到高亮的角度遮罩揭示径向色场，让青、蓝、紫、粉、黄宽光带沿内壁移动，并叠加掠过高光和 bloom；静态卡片使用不占空间的 outline 色相动画，均不增加 border、不改变定位上下文或盒模型；
 - 不在正文上方放置半透明覆盖层；
 - 虹彩使用独立 Web Animations 动画更新自定义属性，不覆盖宿主 CSS `animation`；
 - 主要元素只提升颜色对比度，不改字号、字重、行距、换行或文字尺寸；
@@ -170,7 +170,7 @@ sidecar：
 - 通过 `event.composedPath()` 支持 Shadow DOM 内的卡片；
 - 偏好按钮直接写入本地画像。
 
-活动指示器直接观察现有 `data-dumber-state`，聚合扫描、排队、请求、完成和错误数量；使用 Thinking Orbs 的 Composing 点阵几何与 DUMBER 霓虹色板绘制唯一 Canvas2D 球体，不复制请求状态，也不进入页面布局。
+活动指示器直接观察现有 `data-dumber-state`，聚合扫描、排队、请求、完成和错误数量，并用内容指纹维护不受 X 虚拟列表回收影响的会话已分析/已精选计数；使用 Thinking Orbs 的 Composing 点阵几何与 DUMBER 霓虹色板绘制唯一 Canvas2D 球体，不复制请求状态，也不进入页面布局。
 
 ## 8. 数据最小化
 

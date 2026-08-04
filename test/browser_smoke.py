@@ -260,7 +260,8 @@ def run() -> None:
         )
         page.locator('.dumber-activity[data-phase="requesting"]').wait_for(state="visible")
         assert "Thinking…." in page.locator(".dumber-activity").inner_text()
-        assert "1 条处理中" in page.locator(".dumber-activity").inner_text()
+        assert "已分析 0" in page.locator(".dumber-activity").inner_text()
+        assert "已精选 0" in page.locator(".dumber-activity").inner_text()
         assert page.locator(".dumber-activity").get_attribute("role") == "status"
         assert page.locator(".dumber-activity").evaluate(
             "element => ({ width: element.offsetWidth, height: element.offsetHeight })"
@@ -282,6 +283,11 @@ def run() -> None:
               return chromatic > 80 && leaders.size >= 2;
             }"""
         )
+        activity_detail_layout = page.locator(".dumber-activity-detail").evaluate(
+            "element => ({ visible: element.getClientRects().length > 0, top: element.getBoundingClientRect().top, labelBottom: document.querySelector('.dumber-activity-label').getBoundingClientRect().bottom })"
+        )
+        assert activity_detail_layout["visible"]
+        assert activity_detail_layout["top"] >= activity_detail_layout["labelBottom"]
         page.emulate_media(reduced_motion="reduce")
         page.wait_for_function("document.querySelector('.dumber-activity-signal').dataset.running === 'false'")
         frozen_orb = page.locator(".dumber-activity-signal").evaluate("canvas => canvas.toDataURL()")
@@ -300,7 +306,8 @@ def run() -> None:
             "document.querySelector('.dumber-activity').dataset.phase === 'idle'"
         )
         assert "Ready…." in page.locator(".dumber-activity").inner_text()
-        assert "1 条已处理" in page.locator(".dumber-activity").inner_text()
+        assert "已分析 1" in page.locator(".dumber-activity").inner_text()
+        assert "已精选 1" in page.locator(".dumber-activity").inner_text()
         layout_after = page.locator("article").evaluate(layout_probe)
         assert layout_after == layout_before
         assert page.locator(".dumber-emphasis").count() == 2
@@ -361,6 +368,14 @@ def run() -> None:
         assert "rgb(255, 50, 100)" in ring_background
         assert "rgb(100, 70, 255)" in ring_background
         assert "conic-gradient" in ring_background
+        ring_mask = page.locator("article").evaluate(
+            "element => getComputedStyle(element, '::after').webkitMaskImage"
+        )
+        assert "rgba(0, 0, 0, 0) 30%" in ring_mask
+        assert "rgba(255, 255, 255, 0.1) 36%" in ring_mask
+        assert page.locator("article").evaluate(
+            "element => element.style.getPropertyValue('--dumber-beam-inner')"
+        ) == ".42"
         assert page.locator("article > .dumber-beam-bloom").count() == 1
         beam_animations = page.locator("article").evaluate(
             """element => element.getAnimations({ subtree: true }).map((animation) => ({
@@ -423,6 +438,9 @@ def run() -> None:
             "window.__dumberTest.deferCurate = false; window.__dumberTest.updateSettings({ enabled: true })"
         )
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.wait_for_function(
+            "document.querySelector('[data-dumber-activity-analyzed]').textContent === '2' && document.querySelector('[data-dumber-activity-selected]').textContent === '2'"
+        )
 
         page.evaluate("window.__dumberTest.deferCurate = true")
         page.locator('[data-testid="tweetText"]').evaluate(
@@ -436,6 +454,9 @@ def run() -> None:
         assert page.locator("article.dumber-vip").count() == 0
         page.evaluate("window.__dumberTest.resolveDeferred({ promotionLabel: '新模型精选' })")
         page.locator("article.dumber-vip").wait_for(state="visible")
+        page.wait_for_function(
+            "document.querySelector('[data-dumber-activity-analyzed]').textContent === '3' && document.querySelector('[data-dumber-activity-selected]').textContent === '3'"
+        )
         assert page.locator("article").get_attribute("data-dumber-promotion-label") == "新模型精选"
         page.evaluate("window.__dumberTest.deferCurate = false")
 
