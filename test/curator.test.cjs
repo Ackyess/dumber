@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-require("../src/shared.js");
+const Shared = require("../src/shared.js");
 const Curator = require("../src/curator.js");
 
 const settings = {
@@ -50,6 +50,11 @@ test("builds and parses exact-phrase second-stage output", () => {
   const request = JSON.parse(payload.messages[1].content);
   assert.deepEqual(request.items, [{ id: "item-1", text: "这个惊人结论让所有人彻底疯狂" }]);
   assert.equal(payload.response_format.json_schema.name, "dumber_emphases");
+  assert.equal(
+    payload.response_format.json_schema.schema.properties.emphases.items.properties.phrases.items.maxLength,
+    Shared.EMPHASIS_MAX_LENGTH
+  );
+  assert.match(Curator.EMPHASIS_SYSTEM_PROMPT, /Never return a full clause or sentence/);
 
   const result = Curator.parseEmphasisResponse({
     choices: [{

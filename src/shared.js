@@ -19,13 +19,14 @@
   const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
   const PROMPT_VERSION = "curator-2026-08-04-v6";
-  const EMPHASIS_PROMPT_VERSION = "emphasis-2026-08-04-v1";
+  const EMPHASIS_PROMPT_VERSION = "emphasis-2026-08-04-v2";
   const PIPELINE_PROMPT_VERSION = `${PROMPT_VERSION}+${EMPHASIS_PROMPT_VERSION}`;
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
   const VISUAL_SLA_MS = 1000;
   const CANDIDATE_MIN_DOPAMINE = 0.2;
   const CANDIDATE_MAX_DURABLE = 0.8;
   const DEFAULT_PROMOTABLE_DURABLE_VALUE = 0.45;
+  const EMPHASIS_MAX_LENGTH = 12;
 
   const DRIVER_LABELS = Object.freeze({
     high_emotion: "高情绪浓度",
@@ -270,7 +271,7 @@
     const phrases = [];
     for (const raw of Array.isArray(payload?.phrases) ? payload.phrases : []) {
       const phrase = normalizeText(raw);
-      if (phrase.length < 2 || phrase.length > 40) continue;
+      if (phrase.length < 2 || Array.from(phrase).length > EMPHASIS_MAX_LENGTH) continue;
       let exact = phrase;
       if (sourceText) {
         let index = sourceText.indexOf(phrase);
@@ -567,6 +568,7 @@
     DEFAULT_SETTINGS,
     DRIVER_KEYS,
     DRIVER_LABELS,
+    EMPHASIS_MAX_LENGTH,
     EMPHASIS_PROMPT_VERSION,
     EXTRACTOR_VERSION,
     LEGACY_CACHE_KEYS,

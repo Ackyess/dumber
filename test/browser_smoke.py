@@ -114,7 +114,7 @@ def create_fixture_page(
           const buildEmphasisResponse = () => ({
             ok: true,
             emphasis: {
-              phrases: ["惊人结论", "绝对想不到"],
+              phrases: ["惊人", "想不到"],
               cacheHit: false
             }
           });
@@ -282,11 +282,22 @@ def run() -> None:
         layout_after = page.locator("article").evaluate(layout_probe)
         assert layout_after == layout_before
         assert page.locator(".dumber-emphasis").count() == 2
+        assert page.locator(".dumber-emphasis").all_inner_texts() == ["惊人", "想不到"]
+        neon_colors = page.locator(".dumber-emphasis").evaluate_all(
+            "elements => elements.map((element) => element.style.getPropertyValue('--dumber-neon-a'))"
+        )
+        assert len(set(neon_colors)) == 2
+        assert page.locator(".dumber-emphasis").evaluate_all(
+            "elements => elements.every((element) => getComputedStyle(element).backgroundImage.includes('linear-gradient'))"
+        )
         assert page.locator(".dumber-emphasis").first.evaluate(
             "element => getComputedStyle(element).animationName"
         ) == "none"
         assert page.locator('[data-testid="tweetText"]').inner_text() == "所有人都在讨论的惊人结论：你绝对想不到最后发生了什么。"
         assert page.locator("article.dumber-ring-outline").count() == 1
+        assert page.locator("article").evaluate(
+            "element => getComputedStyle(element).outlineColor"
+        ) == "rgb(185, 140, 255)"
         assert page.locator(".dumber-expanded").count() == 0
         assert page.evaluate("window.__dumberTest.curateCalls") == 1
         page.close()
@@ -322,6 +333,11 @@ def run() -> None:
         assert page.locator("article").evaluate(
             "element => getComputedStyle(element, '::before').content"
         ) != "none"
+        ring_background = page.locator("article").evaluate(
+            "element => getComputedStyle(element, '::before').backgroundImage"
+        )
+        assert "rgb(143, 255, 216)" in ring_background
+        assert "rgb(185, 140, 255)" in ring_background
         assert "fixture-host-pulse" in page.locator("article").evaluate(
             "element => getComputedStyle(element).animationName"
         )

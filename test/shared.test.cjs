@@ -6,6 +6,7 @@ const {
   CANDIDATE_MAX_DURABLE,
   CANDIDATE_MIN_DOPAMINE,
   DEFAULT_SETTINGS,
+  EMPHASIS_MAX_LENGTH,
   EMPHASIS_PROMPT_VERSION,
   EXTRACTOR_VERSION,
   PIPELINE_PROMPT_VERSION,
@@ -195,9 +196,10 @@ test("normalizes only known curation ids and enforces positive UI labels", () =>
 
 test("keeps only exact source phrases for second-stage emphasis", () => {
   assert.equal(PIPELINE_PROMPT_VERSION.includes(EMPHASIS_PROMPT_VERSION), true);
+  assert.equal(EMPHASIS_MAX_LENGTH, 12);
   assert.deepEqual(normalizeEmphasis({
-    phrases: ["太疯狂", "must see", "模型编造", "太疯狂", "X"]
-  }, "这条消息真的太疯狂了，YOU MUST SEE THIS。"), {
+    phrases: ["太疯狂", "must see", "这是一整句完全不应该被高亮", "模型编造", "太疯狂", "X"]
+  }, "这条消息真的太疯狂了，YOU MUST SEE THIS。这是一整句完全不应该被高亮。"), {
     phrases: ["太疯狂", "MUST SEE"]
   });
 });

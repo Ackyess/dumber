@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DUMBER integration fixture</title>
   <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
-    body { margin: 0; min-height: 1800px; background: #f2f3f6; color: #111; }
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; min-height: 1800px; background: #000; color: #f2f3f5; }
     main { width: 620px; margin: 42px auto; }
     article {
       position: relative;
       display: block;
       margin: 0 0 28px;
       padding: 20px;
-      background: #fff;
-      border: 1px solid #ddd;
+      background: #0f1016;
+      border: 1px solid #2f3138;
       border-radius: 16px;
     }
     [data-testid="tweetText"] { font-size: 16px; line-height: 1.35; }
@@ -61,7 +61,7 @@
             window.__dumberTest.emphasisCalls += 1;
             return {
               ok: true,
-              emphasis: { phrases: ["惊人结论", "绝对想不到"], cacheHit: false }
+              emphasis: { phrases: ["惊人", "想不到"], cacheHit: false }
             };
           }
           if (message.type === "preferenceAction") {

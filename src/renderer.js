@@ -23,8 +23,8 @@
       border-radius: var(--dumber-radius) !important;
       background-color: var(--dumber-surface) !important;
       box-shadow:
-        0 0 0 1px rgba(255, 92, 124, .48),
-        0 0 34px rgba(255, 45, 85, .34),
+        0 0 0 1px rgba(255, 255, 255, .34),
+        0 0 26px rgba(156, 113, 255, .22),
         0 18px 48px rgba(18, 14, 36, .12) !important;
     }
 
@@ -34,16 +34,16 @@
       inset: 0;
       z-index: 2;
       box-sizing: border-box;
-      padding: 3px;
+      padding: 2px;
       border-radius: inherit;
       background: conic-gradient(
           from var(--dumber-angle),
-          #ff2d55,
-          #ff7a1a,
-          #ffd166,
-          #ff3d8d,
-          #a855f7,
-          #ff2d55
+          #8fffd8,
+          #80c8ff,
+          #b98cff,
+          #ff87bb,
+          #ffe06f,
+          #8fffd8
         );
       pointer-events: none;
       -webkit-mask:
@@ -54,15 +54,15 @@
     }
 
     .dumber-vip.dumber-ring-outline {
-      outline: 3px solid #ff2d55 !important;
-      outline-offset: -3px !important;
+      outline: 2px solid #b98cff !important;
+      outline-offset: -2px !important;
     }
 
     .dumber-vip:hover,
     .dumber-vip:focus-within {
       box-shadow:
-        0 0 0 1px rgba(255, 116, 142, .62),
-        0 0 46px rgba(255, 45, 85, .43),
+        0 0 0 1px rgba(255, 255, 255, .48),
+        0 0 38px rgba(156, 113, 255, .31),
         0 22px 56px rgba(18, 14, 36, .16) !important;
     }
 
@@ -77,15 +77,25 @@
       display: inline-block;
       margin: 0 -.03em;
       padding: 0 .03em;
-      color: var(--dumber-emphasis-ink, #c9183b) !important;
-      background: linear-gradient(180deg, transparent 58%, rgba(255, 45, 85, .2) 58%);
+      color: var(--dumber-neon-a, #8fffd8) !important;
+      background: linear-gradient(
+        100deg,
+        var(--dumber-neon-a, #8fffd8),
+        var(--dumber-neon-b, #80c8ff),
+        var(--dumber-neon-c, #ff87bb),
+        var(--dumber-neon-a, #8fffd8)
+      );
+      background-size: 240% 100%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       border-radius: .2em;
       line-height: inherit;
-      text-shadow: 0 0 8px rgba(255, 45, 85, .44), 0 0 18px rgba(255, 122, 26, .22);
+      filter: drop-shadow(0 0 3px var(--dumber-neon-glow, #80c8ff));
       transform-origin: 50% 68%;
       animation: dumber-emphasis-live 1700ms cubic-bezier(.45, 0, .25, 1) infinite;
       animation-delay: var(--dumber-emphasis-delay, 0ms);
-      will-change: transform, filter, opacity;
+      will-change: transform, filter, opacity, background-position;
       box-decoration-break: clone;
       -webkit-box-decoration-break: clone;
     }
@@ -267,7 +277,7 @@
       position: absolute;
       inset: 0 0 auto;
       height: 2px;
-      background: linear-gradient(90deg, #ff2d55, #ff7a1a, #ffd166, #ff3d8d, #a855f7, #ff2d55);
+      background: linear-gradient(90deg, #8fffd8, #80c8ff, #b98cff, #ff87bb, #ffe06f, #8fffd8);
       background-size: 200% 100%;
       opacity: .24;
     }
@@ -289,8 +299,8 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: conic-gradient(from 0deg, #ff2d55, #ff7a1a, #ffd166, #ff3d8d, #a855f7, #ff2d55);
-      box-shadow: 0 0 14px rgba(255, 45, 85, .24);
+      background: conic-gradient(from 0deg, #8fffd8, #80c8ff, #b98cff, #ff87bb, #ffe06f, #8fffd8);
+      box-shadow: 0 0 14px rgba(143, 255, 216, .2);
     }
 
     .dumber-activity-signal::after {
@@ -349,12 +359,12 @@
     }
 
     @keyframes dumber-emphasis-live {
-      0%, 100% { transform: translate(0, 0) scale(1.05) rotate(-.15deg); filter: brightness(1); opacity: 1; }
-      18% { transform: translate(-.8px, -1.2px) scale(1.18) rotate(-1deg); filter: brightness(1.18) saturate(1.15); opacity: 1; }
-      36% { transform: translate(.9px, .5px) scale(1.1) rotate(.85deg); filter: brightness(1); opacity: .96; }
-      49% { transform: translate(0, 0) scale(1.07) rotate(0); filter: brightness(1.5) saturate(1.32); opacity: .78; }
-      68% { transform: translate(-.5px, .8px) scale(1.15) rotate(-.65deg); filter: brightness(1.12); opacity: 1; }
-      84% { transform: translate(.45px, -.6px) scale(1.09) rotate(.45deg); filter: brightness(1); opacity: .94; }
+      0%, 100% { transform: translate(0, 0) scale(1.05) rotate(-.15deg); filter: drop-shadow(0 0 3px var(--dumber-neon-glow)); opacity: 1; background-position: 0% 50%; }
+      18% { transform: translate(-.8px, -1.2px) scale(1.18) rotate(-1deg); filter: drop-shadow(0 0 7px var(--dumber-neon-glow)) brightness(1.2) saturate(1.3); opacity: 1; }
+      36% { transform: translate(.9px, .5px) scale(1.1) rotate(.85deg); opacity: .96; }
+      49% { transform: translate(0, 0) scale(1.07) rotate(0); filter: drop-shadow(0 0 10px var(--dumber-neon-glow)) brightness(1.5) saturate(1.45); opacity: .8; background-position: 100% 50%; }
+      68% { transform: translate(-.5px, .8px) scale(1.15) rotate(-.65deg); opacity: 1; }
+      84% { transform: translate(.45px, -.6px) scale(1.09) rotate(.45deg); opacity: .94; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -365,7 +375,8 @@
       .dumber-emphasis {
         animation: none !important;
         transform: scale(1.08);
-        filter: none;
+        filter: drop-shadow(0 0 4px var(--dumber-neon-glow));
+        background-position: 50% 50%;
         opacity: 1;
       }
     }
@@ -397,6 +408,23 @@
     "ദ്ദി\nNICE",
     "D↑\nVIP"
   ]);
+
+  const EMPHASIS_PALETTES = Object.freeze({
+    dark: Object.freeze([
+      ["#56ffe0", "#5ebdff", "#c895ff"],
+      ["#ff68cc", "#ff8a68", "#ffe66d"],
+      ["#a8ff70", "#56eaff", "#7b8dff"],
+      ["#ffe66d", "#ff7dba", "#bd8cff"],
+      ["#62fff5", "#9fff70", "#ffe66d"]
+    ]),
+    light: Object.freeze([
+      ["#007e6f", "#006ed2", "#7333c6"],
+      ["#c80072", "#d34300", "#8a6800"],
+      ["#358000", "#007d95", "#344cc1"],
+      ["#8a6900", "#be2670", "#6932ba"],
+      ["#007b78", "#4a8000", "#9b6300"]
+    ])
+  });
 
   function createRenderer({ document: documentValue, onPreference, onHover } = {}) {
     const doc = documentValue || globalThis.document;
@@ -479,7 +507,6 @@
       card.dataset.dumberPromotionLabel = curation.promotionLabel || Shared.DRIVER_LABELS[curation.primaryDriver];
       card.style.setProperty("--dumber-surface", dark ? "rgba(17, 18, 24, .985)" : "rgba(250, 250, 253, .985)");
       card.style.setProperty("--dumber-ink", dark ? "#f7f8fb" : "#11131a");
-      card.style.setProperty("--dumber-emphasis-ink", dark ? "#ff6b88" : "#c9183b");
       card.style.setProperty("--dumber-radius", computed?.borderRadius && computed.borderRadius !== "0px" ? computed.borderRadius : "16px");
 
       const payload = {
@@ -514,11 +541,17 @@
       if (!reusable) {
         clearEmphasis(record, card);
         const spans = [];
+        const palettes = EMPHASIS_PALETTES[isDarkSurface(card, win) ? "dark" : "light"];
         for (const element of record.primaryElements) {
           spans.push(...wrapExactPhrases(element, phrases, doc, 8 - spans.length));
           if (spans.length >= 8) break;
         }
         spans.forEach((span, index) => {
+          const palette = palettes[index % palettes.length];
+          span.style.setProperty("--dumber-neon-a", palette[0]);
+          span.style.setProperty("--dumber-neon-b", palette[1]);
+          span.style.setProperty("--dumber-neon-c", palette[2]);
+          span.style.setProperty("--dumber-neon-glow", palette[1]);
           span.style.setProperty("--dumber-emphasis-delay", `${-(index * 173)}ms`);
         });
         record.emphasisApplied = true;
@@ -570,7 +603,6 @@
       }
       card?.style?.removeProperty("--dumber-surface");
       card?.style?.removeProperty("--dumber-ink");
-      card?.style?.removeProperty("--dumber-emphasis-ink");
       card?.style?.removeProperty("--dumber-radius");
       card?.style?.removeProperty("--dumber-angle");
       for (const element of record?.primaryElements || []) element.classList?.remove("dumber-primary");
@@ -596,19 +628,19 @@
       try {
         const frames = card.classList.contains("dumber-ring-outline")
           ? [
-              { outlineColor: "#ff2d55" },
-              { outlineColor: "#ff7a1a" },
-              { outlineColor: "#ffd166" },
-              { outlineColor: "#ff3d8d" },
-              { outlineColor: "#a855f7" },
-              { outlineColor: "#ff2d55" }
+              { outlineColor: "#8fffd8" },
+              { outlineColor: "#80c8ff" },
+              { outlineColor: "#b98cff" },
+              { outlineColor: "#ff87bb" },
+              { outlineColor: "#ffe06f" },
+              { outlineColor: "#8fffd8" }
             ]
           : [
               { "--dumber-angle": "0deg" },
               { "--dumber-angle": "360deg" }
             ];
         record.spectrumAnimation = card.animate(frames, {
-          duration: 7600,
+          duration: 14000,
           easing: "linear",
           iterations: Infinity
         });
