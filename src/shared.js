@@ -39,7 +39,7 @@
   const DEFAULT_SETTINGS = Object.freeze({
     schemaVersion: SETTINGS_SCHEMA_VERSION,
     enabled: true,
-    apiBaseUrl: "https://api.deepseek.com/v1",
+    apiBaseUrl: "https://api.deepseek.com",
     apiKey: "",
     model: "deepseek-v4-flash",
     promotionThreshold: 0.72,
@@ -144,6 +144,7 @@
     url.search = "";
     url.hash = "";
     url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+    if (url.hostname === "api.deepseek.com" && url.pathname === "/v1") url.pathname = "/";
     return url.toString().replace(/\/$/, "");
   }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4 — 2026-08-04
+
+- API 地址统一显示为 DeepSeek 官方根地址 `https://api.deepseek.com`。
+- 旧的官方 `/v1` 配置在共享 URL 规范化入口自动收敛，实际请求仍发送到 `/v1/chat/completions`。
+
 ## 0.3.3 — 2026-08-04
 
 - 默认 API 切换为 DeepSeek 官方接口，默认模型切换为 `deepseek-v4-flash`。

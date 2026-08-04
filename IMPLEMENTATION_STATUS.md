@@ -1,6 +1,6 @@
 # Roadmap Implementation Status
 
-本文件记录 0.3.3 对 `ROADMAP.md` 的实现覆盖，不修改路线图本身的验收定义。
+本文件记录 0.3.4 对 `ROADMAP.md` 的实现覆盖，不修改路线图本身的验收定义。
 
 ## v0.2 — 运行时重置与稳定性
 

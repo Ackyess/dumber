@@ -196,7 +196,7 @@ test("official DeepSeek Flash requests disable thinking without a schema retry",
     request = JSON.parse(init.body);
     return successResponseForRequest(init);
   }, {
-    apiBaseUrl: "https://api.deepseek.com/v1",
+    apiBaseUrl: "https://api.deepseek.com",
     model: "deepseek-v4-flash"
   });
   const response = await harness.send(curationMessage());

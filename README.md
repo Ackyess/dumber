@@ -2,7 +2,7 @@
 
 DUMBER 是一个 Chrome Manifest V3 扩展。它不是过滤器、警告器或数字健康工具，而是一位真诚挑选、优化并推广高刺激、低持久价值内容的 AI 策展人。
 
-当前版本：`0.3.3`
+当前版本：`0.3.4`
 
 ## 运行时体验
 
@@ -51,7 +51,7 @@ Bilibili/BewlyBewly 适配器源码与 fixture 作为工程底座保留，但当
 DUMBER 不内置 API Key，也不绑定第三方代理。默认使用 DeepSeek 官方接口：
 
 ```text
-https://api.deepseek.com/v1
+https://api.deepseek.com
 ```
 
 默认模型为 `deepseek-v4-flash`。升级时，官方 xAI 配置会切换到 DeepSeek 并清空不兼容的 xAI Key；自定义 Grok 网关会保留地址与 Key，只把模型名切换为 DeepSeek Flash。
@@ -211,10 +211,10 @@ npm run package
 输出：
 
 ```text
-dist/dumber-0.3.3.zip
-dist/dumber-0.3.3.zip.sha256
-dist/dumber-0.3.3-source.zip
-dist/dumber-0.3.3-source.zip.sha256
+dist/dumber-0.3.4.zip
+dist/dumber-0.3.4.zip.sha256
+dist/dumber-0.3.4-source.zip
+dist/dumber-0.3.4-source.zip.sha256
 ```
 
 打包器使用固定文件顺序、固定时间戳、无压缩存储和固定文件元数据。可以通过 `SOURCE_DATE_EPOCH` 覆盖时间戳。安装包只包含扩展运行所需文件和核心说明；源码包包含测试、评测工具、CI 与开发文档。

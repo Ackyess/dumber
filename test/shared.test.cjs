@@ -24,7 +24,7 @@ const {
 } = Shared;
 
 test("ships DeepSeek Flash BYOK defaults without a credential", () => {
-  assert.equal(DEFAULT_SETTINGS.apiBaseUrl, "https://api.deepseek.com/v1");
+  assert.equal(DEFAULT_SETTINGS.apiBaseUrl, "https://api.deepseek.com");
   assert.equal(DEFAULT_SETTINGS.apiKey, "");
   assert.equal(DEFAULT_SETTINGS.model, "deepseek-v4-flash");
   assert.equal(DEFAULT_SETTINGS.schemaVersion, SETTINGS_SCHEMA_VERSION);
@@ -40,7 +40,7 @@ test("migrates official xAI settings to DeepSeek without carrying its key", () =
     apiKey: "xai-local-key",
     model: "grok4.5"
   });
-  assert.equal(migrated.apiBaseUrl, "https://api.deepseek.com/v1");
+  assert.equal(migrated.apiBaseUrl, "https://api.deepseek.com");
   assert.equal(migrated.apiKey, "");
   assert.equal(migrated.model, "deepseek-v4-flash");
 });
@@ -83,6 +83,14 @@ test("preserves a current-schema local credential and migrates the old timeout",
 });
 
 test("normalizes OpenAI-compatible API roots", () => {
+  assert.equal(
+    sanitizeSettings({ schemaVersion: SETTINGS_SCHEMA_VERSION, apiBaseUrl: "https://api.deepseek.com/v1" }).apiBaseUrl,
+    "https://api.deepseek.com"
+  );
+  assert.equal(
+    normalizeApiUrl("https://api.deepseek.com"),
+    "https://api.deepseek.com/v1/chat/completions"
+  );
   assert.equal(
     normalizeApiUrl("https://api.example.com/"),
     "https://api.example.com/v1/chat/completions"
