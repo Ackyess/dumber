@@ -114,7 +114,7 @@
       if (!response?.ok) throw new Error(response?.error || "连接测试失败");
       const latencyMs = Math.max(0, Math.round(Number(response.latencyMs) || 0));
       if (latencyMs >= Shared.VISUAL_SLA_MS) {
-        throw new Error(`连接可用，但冷请求耗时 ${latencyMs}ms，未达到 1 秒 SLA。请改用非推理模型或更快的 API 服务。`);
+        throw new Error(`连接可用，但冷请求耗时 ${latencyMs}ms，未达到 1 秒 SLA。请检查网络或改用更快的 API 服务。`);
       }
       showStatus(`连接正常，冷请求 ${latencyMs}ms。`, "success");
       await refreshDashboard();

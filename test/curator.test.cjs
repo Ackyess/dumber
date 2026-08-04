@@ -29,12 +29,15 @@ test("builds the new curation schema", () => {
   assert.match(Curator.SYSTEM_PROMPT, /Curiosity.*alone are insufficient/);
 });
 
-test("uses low reasoning for grok-4.5 aliases", () => {
+test("uses non-thinking JSON output for DeepSeek Flash", () => {
   const item = [{ id: "item-1", context: { text: "测试" } }];
-  assert.equal(Curator.createRequestPayload({ model: "grok-4.5" }, item).reasoning_effort, "low");
-  assert.equal(Curator.createRequestPayload({ model: "grok4.5" }, item).reasoning_effort, "low");
-  assert.equal(Curator.createRequestPayload({ model: "grok_4_5-latest" }, item).reasoning_effort, "low");
-  assert.equal(Curator.createRequestPayload(settings, item).reasoning_effort, undefined);
+  const payload = Curator.createRequestPayload({ model: "deepseek-v4-flash" }, item);
+  assert.deepEqual(payload.thinking, { type: "disabled" });
+  assert.deepEqual(payload.response_format, { type: "json_object" });
+
+  const generic = Curator.createRequestPayload(settings, item);
+  assert.equal(generic.thinking, undefined);
+  assert.equal(generic.response_format.type, "json_schema");
 });
 
 test("caps model context and omits non-semantic fields", () => {

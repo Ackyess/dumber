@@ -2,7 +2,7 @@
 
 DUMBER 是一个 Chrome Manifest V3 扩展。它不是过滤器、警告器或数字健康工具，而是一位真诚挑选、优化并推广高刺激、低持久价值内容的 AI 策展人。
 
-当前版本：`0.3.2`
+当前版本：`0.3.3`
 
 ## 运行时体验
 
@@ -43,18 +43,18 @@ Bilibili/BewlyBewly 适配器源码与 fixture 作为工程底座保留，但当
 3. 开启“开发者模式”。
 4. 点击“加载已解压的扩展程序”。
 5. 选择解压后的目录。
-6. 打开 DUMBER 的“策展设置”，填写 API 地址、模型和 API Key。
+6. 打开 DUMBER 的“策展设置”，填写 DeepSeek API Key。
 7. 点击“测试模型连接”，确认结构化输出可用。
 
 ## BYOK 配置
 
-DUMBER 不再内置 API Key，也不绑定第三方代理。默认 API 地址是：
+DUMBER 不内置 API Key，也不绑定第三方代理。默认使用 DeepSeek 官方接口：
 
 ```text
-https://api.x.ai/v1
+https://api.deepseek.com/v1
 ```
 
-模型名称保持为空，必须由用户填写。也可以使用其他兼容 `/chat/completions` 与 `response_format` 的接口。
+默认模型为 `deepseek-v4-flash`。升级时，官方 xAI 配置会切换到 DeepSeek 并清空不兼容的 xAI Key；自定义 Grok 网关会保留地址与 Key，只把模型名切换为 DeepSeek Flash。
 
 远程 API 必须使用 HTTPS；HTTP 只允许 `localhost` 与 `127.0.0.1`，用于本机模型服务。API 地址不得包含用户名或密码。
 
@@ -109,8 +109,8 @@ UI 标签由本地 `primaryDriver` 映射生成，不再要求模型生成重复
 - 相同缓存键在等待中或执行中都会合并为同一个请求；
 - API 批次严格串行，避免并发请求风暴；
 - 请求使用紧凑、非流式结构化输出；正文最多发送 700 字，删除 URL 等无关字段；
-- `grok-4.5`、`grok4.5` 等常见别名都会显式使用 low 推理；其他模型不注入供应商专属参数；
-- 官方 xAI 请求使用稳定的 `x-grok-conv-id`，提高提示词缓存命中；
+- `deepseek-v4-flash` 显式关闭 thinking，避免默认 high 思考占用实时路径；
+- DeepSeek 直接使用 `json_object`，避免先发送不兼容的 JSON Schema 请求；
 - 设置和缓存会在 service worker 启动时预热，工程指标写入不阻塞模型请求；
 - 28 秒超时仍作为异常请求的安全上限，不作为性能目标；
 - 429 与 5xx 最多重试一次；
@@ -211,10 +211,10 @@ npm run package
 输出：
 
 ```text
-dist/dumber-0.3.2.zip
-dist/dumber-0.3.2.zip.sha256
-dist/dumber-0.3.2-source.zip
-dist/dumber-0.3.2-source.zip.sha256
+dist/dumber-0.3.3.zip
+dist/dumber-0.3.3.zip.sha256
+dist/dumber-0.3.3-source.zip
+dist/dumber-0.3.3-source.zip.sha256
 ```
 
 打包器使用固定文件顺序、固定时间戳、无压缩存储和固定文件元数据。可以通过 `SOURCE_DATE_EPOCH` 覆盖时间戳。安装包只包含扩展运行所需文件和核心说明；源码包包含测试、评测工具、CI 与开发文档。

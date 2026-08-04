@@ -43,13 +43,14 @@ function createStorageArea(initial = {}) {
 
 function createHarness(fetchImpl, {
   permissionGranted = true,
-  apiBaseUrl = "https://api.example.test/v1"
+  apiBaseUrl = "https://api.example.test/v1",
+  model = "fixture-model"
 } = {}) {
   const settings = Shared.sanitizeSettings({
     schemaVersion: Shared.SETTINGS_SCHEMA_VERSION,
     apiBaseUrl,
     apiKey: "fixture-key",
-    model: "fixture-model",
+    model,
     requestTimeoutMs: 4000
   });
   const local = createStorageArea({ [Shared.SETTINGS_KEY]: settings });
@@ -189,16 +190,20 @@ test("background keeps non-model overhead inside the one-second budget", async (
   assert.ok(performance.now() - startedAt < 1000);
 });
 
-test("official xAI requests carry a stable prompt-cache routing key", async () => {
-  let headers;
+test("official DeepSeek Flash requests disable thinking without a schema retry", async () => {
+  let request;
   const harness = createHarness(async (_url, init) => {
-    headers = init.headers;
+    request = JSON.parse(init.body);
     return successResponseForRequest(init);
-  }, { apiBaseUrl: "https://api.x.ai/v1" });
+  }, {
+    apiBaseUrl: "https://api.deepseek.com/v1",
+    model: "deepseek-v4-flash"
+  });
   const response = await harness.send(curationMessage());
 
   assert.equal(response.ok, true, JSON.stringify(response));
-  assert.match(headers["x-grok-conv-id"], /^dumber-[0-9a-f]{16}$/);
+  assert.deepEqual(request.thinking, { type: "disabled" });
+  assert.deepEqual(request.response_format, { type: "json_object" });
 });
 
 test("background reconstructs OpenAI-compatible streaming responses", async () => {

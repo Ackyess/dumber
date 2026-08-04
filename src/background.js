@@ -347,9 +347,6 @@ async function fetchWithRetry(settings, payload, generation) {
         "Authorization": `Bearer ${settings.apiKey}`,
         "Content-Type": "application/json"
       };
-      if (new URL(endpoint).hostname === "api.x.ai") {
-        headers["x-grok-conv-id"] = `dumber-${Shared.hashText(`${settings.model}:${Shared.PROMPT_VERSION}`)}`;
-      }
       response = await fetch(endpoint, {
         method: "POST",
         headers,

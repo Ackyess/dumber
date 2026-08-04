@@ -23,14 +23,38 @@ const {
   validateSettings
 } = Shared;
 
-test("ships BYOK defaults without a credential or fixed model", () => {
-  assert.equal(DEFAULT_SETTINGS.apiBaseUrl, "https://api.x.ai/v1");
+test("ships DeepSeek Flash BYOK defaults without a credential", () => {
+  assert.equal(DEFAULT_SETTINGS.apiBaseUrl, "https://api.deepseek.com/v1");
   assert.equal(DEFAULT_SETTINGS.apiKey, "");
-  assert.equal(DEFAULT_SETTINGS.model, "");
+  assert.equal(DEFAULT_SETTINGS.model, "deepseek-v4-flash");
   assert.equal(DEFAULT_SETTINGS.schemaVersion, SETTINGS_SCHEMA_VERSION);
   assert.equal(DEFAULT_SETTINGS.requestTimeoutMs, 28000);
   assert.equal(DEFAULT_SETTINGS.xEnabled, true);
   assert.equal(DEFAULT_SETTINGS.bilibiliEnabled, false);
+});
+
+test("migrates official xAI settings to DeepSeek without carrying its key", () => {
+  const migrated = sanitizeSettings({
+    schemaVersion: 2,
+    apiBaseUrl: "https://api.x.ai/v1",
+    apiKey: "xai-local-key",
+    model: "grok4.5"
+  });
+  assert.equal(migrated.apiBaseUrl, "https://api.deepseek.com/v1");
+  assert.equal(migrated.apiKey, "");
+  assert.equal(migrated.model, "deepseek-v4-flash");
+});
+
+test("switches a Grok proxy model while retaining its local gateway key", () => {
+  const migrated = sanitizeSettings({
+    schemaVersion: 2,
+    apiBaseUrl: "https://gateway.example/v1",
+    apiKey: "gateway-local-key",
+    model: "grok-4.5"
+  });
+  assert.equal(migrated.apiBaseUrl, "https://gateway.example/v1");
+  assert.equal(migrated.apiKey, "gateway-local-key");
+  assert.equal(migrated.model, "deepseek-v4-flash");
 });
 
 test("drops credentials from the legacy settings schema", () => {

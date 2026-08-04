@@ -63,7 +63,7 @@
 - `AbortController` 提供硬超时；
 - 设置与缓存随 service worker 启动预热；
 - 批处理不增加人为等待，工程指标写入不阻塞网络关键路径；
-- 官方 xAI Chat Completions 使用稳定 `x-grok-conv-id` 复用提示词缓存；
+- DeepSeek V4 Flash 显式关闭 thinking，并直接请求 `json_object`；
 - 模型请求使用紧凑非流式 JSON，因为完成前不存在可消费的局部判定；
 - 429/5xx 最多重试一次；
 - `Retry-After` 最高等待 1.5 秒；

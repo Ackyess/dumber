@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 — 2026-08-04
+
+- 默认 API 切换为 DeepSeek 官方接口，默认模型切换为 `deepseek-v4-flash`。
+- DeepSeek V4 Flash 显式使用 `thinking: { type: "disabled" }`，避免默认 high 思考进入实时分类路径。
+- DeepSeek 请求直接使用 `json_object`，不再先触发一次 JSON Schema 兼容回退。
+- 升级时迁移 Grok 模型配置；官方 xAI Key 不跨提供方迁移，自定义网关 Key 仍保留在本地。
+- 官方冷请求实测 767ms，模型、JSON 输出和非思考模式均验证通过。
+
 ## 0.3.2 — 2026-07-23
 
 - 将体验 SLA 定义为卡片进入视口后 1000ms 内获得最终视觉状态。

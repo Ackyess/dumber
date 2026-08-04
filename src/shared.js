@@ -14,11 +14,11 @@
     "dumberPromotionCacheV2"
   ]);
 
-  const SETTINGS_SCHEMA_VERSION = 2;
+  const SETTINGS_SCHEMA_VERSION = 3;
   const CACHE_SCHEMA_VERSION = 3;
   const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
-  const PROMPT_VERSION = "curator-2026-07-23-v3";
+  const PROMPT_VERSION = "curator-2026-08-04-v4";
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
   const VISUAL_SLA_MS = 1000;
   // ponytail: fixed high-precision veto; make it configurable only after a real regression set justifies it.
@@ -39,9 +39,9 @@
   const DEFAULT_SETTINGS = Object.freeze({
     schemaVersion: SETTINGS_SCHEMA_VERSION,
     enabled: true,
-    apiBaseUrl: "https://api.x.ai/v1",
+    apiBaseUrl: "https://api.deepseek.com/v1",
     apiKey: "",
-    model: "",
+    model: "deepseek-v4-flash",
     promotionThreshold: 0.72,
     xEnabled: true,
     bilibiliEnabled: false,
@@ -160,13 +160,19 @@
 
   function sanitizeSettings(value) {
     const source = value && typeof value === "object" ? value : {};
-    const isCurrentSchema = source.schemaVersion === SETTINGS_SCHEMA_VERSION;
+    const sourceSchemaVersion = Math.trunc(finiteNumber(source.schemaVersion, 0));
+    const canMigrateCredential = sourceSchemaVersion >= 2;
     let apiBaseUrl = DEFAULT_SETTINGS.apiBaseUrl;
     try {
       apiBaseUrl = normalizeApiBaseUrl(source.apiBaseUrl || DEFAULT_SETTINGS.apiBaseUrl);
     } catch {
       apiBaseUrl = DEFAULT_SETTINGS.apiBaseUrl;
     }
+    const sourceModel = normalizeText(source.model).slice(0, 160);
+    const upgrading = sourceSchemaVersion > 0 && sourceSchemaVersion < SETTINGS_SCHEMA_VERSION;
+    const wasOfficialXai = upgrading && new URL(apiBaseUrl).hostname === "api.x.ai";
+    const wasGrok = upgrading && /^grok(?:[-_.]|\d)/i.test(sourceModel);
+    if (wasOfficialXai) apiBaseUrl = DEFAULT_SETTINGS.apiBaseUrl;
 
     const legacyThreshold = source.promotionThreshold ?? source.threshold;
     const requestTimeoutMs = finiteNumber(source.requestTimeoutMs, DEFAULT_SETTINGS.requestTimeoutMs);
@@ -175,8 +181,12 @@
       enabled: source.enabled !== false,
       apiBaseUrl,
       // v0.1 shipped a source-level development credential. Never migrate that credential.
-      apiKey: isCurrentSchema ? normalizeText(source.apiKey).slice(0, 512) : "",
-      model: normalizeText(source.model).slice(0, 160),
+      apiKey: canMigrateCredential && !wasOfficialXai
+        ? normalizeText(source.apiKey).slice(0, 512)
+        : "",
+      model: wasOfficialXai || wasGrok
+        ? DEFAULT_SETTINGS.model
+        : sourceModel || DEFAULT_SETTINGS.model,
       promotionThreshold: clamp(
         finiteNumber(legacyThreshold, DEFAULT_SETTINGS.promotionThreshold),
         0.5,
