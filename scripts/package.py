@@ -21,6 +21,7 @@ SOURCE_OUTPUT = DIST / f"dumber-{VERSION}-source.zip"
 INSTALL_FILES = [
     "manifest.json",
     "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "README.md",
     "ROADMAP.md",
     "PRIVACY.md",

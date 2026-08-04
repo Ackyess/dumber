@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.11 — 2026-08-04
+
+- 以 Border Beam 的原始 1.96 秒光束、径向色场、边缘遮罩、12 秒 hue shift 与 bloom 结构重建精选边框，并提高最低亮度以保持旧版整圈强虹彩。
+- 将活动指示器改为 Thinking Orbs 的 Composing 点阵球体与 270 × 74 胶囊，保留原始投影、点阵密度、深度排序和 2.34 倍时钟。
+- 球体绘制改用 DUMBER 青、蓝、紫、粉、黄霓虹色板；状态文字显示 `Scanning / Thinking / Composing / Ready / Retrying` 并同步虹彩 shimmer。
+- 两种效果均无运行时依赖；卡片光束继续使用 Web Animations，点阵球在空闲、后台页和 reduced-motion 下停止逐帧绘制。
+- 新增第三方 MIT 归属、点阵多色/尺寸/静止状态以及 Beam 分层结构的 Chromium 回归。
+
 ## 0.3.10 — 2026-08-04
 
 - 将首轮边框完整恢复为此前的 2px 青、蓝、紫、粉、黄慢速虹彩与冷色环境光。

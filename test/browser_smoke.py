@@ -259,17 +259,38 @@ def run() -> None:
             "window.__dumberTest.updateSettings({ apiKey: 'fixture-key', model: 'fixture-model' })"
         )
         page.locator('.dumber-activity[data-phase="requesting"]').wait_for(state="visible")
-        assert "AI 分析中" in page.locator(".dumber-activity").inner_text()
+        assert "Thinking…." in page.locator(".dumber-activity").inner_text()
         assert "1 条处理中" in page.locator(".dumber-activity").inner_text()
         assert page.locator(".dumber-activity").get_attribute("role") == "status"
-        page.emulate_media(reduced_motion="reduce")
+        assert page.locator(".dumber-activity").evaluate(
+            "element => ({ width: element.offsetWidth, height: element.offsetHeight })"
+        ) == {"width": 270, "height": 74}
         assert page.locator(".dumber-activity-signal").evaluate(
-            "element => getComputedStyle(element).animationName"
-        ) == "none"
+            "element => ({ cssWidth: element.offsetWidth, cssHeight: element.offsetHeight, width: element.width, height: element.height, running: element.dataset.running })"
+        ) == {"cssWidth": 56, "cssHeight": 56, "width": 64, "height": 64, "running": "true"}
+        assert page.locator(".dumber-activity-signal").evaluate(
+            """canvas => {
+              const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+              let chromatic = 0;
+              const leaders = new Set();
+              for (let i = 0; i < pixels.length; i += 4) {
+                const [r, g, b, a] = pixels.slice(i, i + 4);
+                if (a < 20 || Math.max(r, g, b) - Math.min(r, g, b) < 12) continue;
+                chromatic += 1;
+                leaders.add(r >= g && r >= b ? 'r' : g >= b ? 'g' : 'b');
+              }
+              return chromatic > 80 && leaders.size >= 2;
+            }"""
+        )
+        page.emulate_media(reduced_motion="reduce")
+        page.wait_for_function("document.querySelector('.dumber-activity-signal').dataset.running === 'false'")
+        frozen_orb = page.locator(".dumber-activity-signal").evaluate("canvas => canvas.toDataURL()")
+        page.wait_for_timeout(80)
+        assert page.locator(".dumber-activity-signal").evaluate("canvas => canvas.toDataURL()") == frozen_orb
         page.evaluate("window.__dumberTest.resolveDeferred(); window.__dumberTest.deferCurate = false")
         page.locator("article.dumber-vip").wait_for(state="visible")
         page.locator('.dumber-activity[data-phase="enhancing"]').wait_for(state="visible")
-        assert "AI 正在强化文案" in page.locator(".dumber-activity").inner_text()
+        assert "Composing…." in page.locator(".dumber-activity").inner_text()
         assert page.locator(".dumber-emphasis").count() == 0
         assert page.evaluate("window.__dumberTest.emphasisCalls") == 1
         layout_phase_one = page.locator("article").evaluate(layout_probe)
@@ -278,6 +299,7 @@ def run() -> None:
         page.wait_for_function(
             "document.querySelector('.dumber-activity').dataset.phase === 'idle'"
         )
+        assert "Ready…." in page.locator(".dumber-activity").inner_text()
         assert "1 条已处理" in page.locator(".dumber-activity").inner_text()
         layout_after = page.locator("article").evaluate(layout_probe)
         assert layout_after == layout_before
@@ -334,10 +356,26 @@ def run() -> None:
             "element => getComputedStyle(element, '::before').content"
         ) != "none"
         ring_background = page.locator("article").evaluate(
-            "element => getComputedStyle(element, '::before').backgroundImage"
+            "element => getComputedStyle(element, '::after').backgroundImage"
         )
-        assert "rgb(143, 255, 216)" in ring_background
-        assert "rgb(185, 140, 255)" in ring_background
+        assert "rgb(255, 50, 100)" in ring_background
+        assert "rgb(100, 70, 255)" in ring_background
+        assert "conic-gradient" in ring_background
+        assert page.locator("article > .dumber-beam-bloom").count() == 1
+        beam_animations = page.locator("article").evaluate(
+            """element => element.getAnimations({ subtree: true }).map((animation) => ({
+              duration: animation.effect.getTiming().duration,
+              pseudo: animation.effect.pseudoElement || null,
+              name: animation.animationName || ''
+            }))"""
+        )
+        assert any(animation["duration"] == 1960 for animation in beam_animations)
+        assert any(
+            animation["duration"] == 12000
+            and animation["pseudo"] in {"::before", "::after"}
+            and animation["name"] == "dumber-beam-hue"
+            for animation in beam_animations
+        )
         assert "fixture-host-pulse" in page.locator("article").evaluate(
             "element => getComputedStyle(element).animationName"
         )
