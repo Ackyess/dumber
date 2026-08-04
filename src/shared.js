@@ -18,11 +18,10 @@
   const CACHE_SCHEMA_VERSION = 3;
   const PROFILE_SCHEMA_VERSION = 2;
   const METRICS_SCHEMA_VERSION = 1;
-  const PROMPT_VERSION = "curator-2026-08-04-v4";
+  const PROMPT_VERSION = "curator-2026-08-04-v5";
   const EXTRACTOR_VERSION = "extractors-2026-07-23-v2";
   const VISUAL_SLA_MS = 1000;
-  // ponytail: fixed high-precision veto; make it configurable only after a real regression set justifies it.
-  const MAX_PROMOTABLE_DURABLE_VALUE = 0.45;
+  const DEFAULT_PROMOTABLE_DURABLE_VALUE = 0.45;
 
   const DRIVER_LABELS = Object.freeze({
     high_emotion: "高情绪浓度",
@@ -399,6 +398,12 @@
     return clamp((driver * 0.6) + (account * 0.3) + (topic * 0.1), -0.18, 0.18);
   }
 
+  function promotionDurableLimit(thresholdValue) {
+    // ponytail: one linear strictness control; split the gates only if real usage needs independent tuning.
+    const threshold = clamp(finiteNumber(thresholdValue, DEFAULT_SETTINGS.promotionThreshold), 0.5, 0.95);
+    return Math.round((0.65 - (((threshold - 0.5) / 0.45) * 0.4)) * 100) / 100;
+  }
+
   function getPromotionDecision(curation, settingsValue, profileValue, contextValue) {
     const settings = sanitizeSettings(settingsValue);
     const baseScore = clamp(finiteNumber(curation?.dopamineScore, 0), 0, 1);
@@ -412,7 +417,8 @@
       ? preferenceBoost(profileValue, context)
       : 0;
     const adjustedScore = clamp(baseScore + boost, 0, 1);
-    const durableEligible = durableValue <= MAX_PROMOTABLE_DURABLE_VALUE;
+    const durableLimit = promotionDurableLimit(settings.promotionThreshold);
+    const durableEligible = durableValue <= durableLimit;
     return {
       promote: curation?.promote === true
         && durableEligible
@@ -422,6 +428,7 @@
       boost,
       adjustedScore,
       durableValue,
+      durableLimit,
       durableEligible,
       itemVeto,
       threshold: settings.promotionThreshold
@@ -526,7 +533,6 @@
     DRIVER_LABELS,
     EXTRACTOR_VERSION,
     LEGACY_CACHE_KEYS,
-    MAX_PROMOTABLE_DURABLE_VALUE,
     METRICS_KEY,
     METRICS_SCHEMA_VERSION,
     PROFILE_KEY,
@@ -560,6 +566,7 @@
     percentile,
     positivePromotionLabel,
     preferenceBoost,
+    promotionDurableLimit,
     redactSettings,
     sanitizePreferenceContext,
     sanitizeSettings,

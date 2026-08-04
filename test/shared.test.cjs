@@ -5,7 +5,6 @@ const Shared = require("../src/shared.js");
 const {
   DEFAULT_SETTINGS,
   EXTRACTOR_VERSION,
-  MAX_PROMOTABLE_DURABLE_VALUE,
   PROMPT_VERSION,
   SETTINGS_SCHEMA_VERSION,
   applyPreferenceAction,
@@ -18,6 +17,7 @@ const {
   normalizeMetrics,
   normalizeProfile,
   parseJsonContent,
+  promotionDurableLimit,
   sanitizeSettings,
   toOriginPattern,
   validateSettings
@@ -226,7 +226,7 @@ test("local preference actions alter only the relevant promotion score", () => {
   assert.equal(profile.totalActions, 1);
 });
 
-test("durable value is a hard promotion gate", () => {
+test("default strictness keeps durable value as a hard promotion gate", () => {
   const context = {
     platform: "x",
     author: "favorite",
@@ -253,17 +253,36 @@ test("durable value is a hard promotion gate", () => {
 
   const valuable = getPromotionDecision({
     ...base,
-    durableValue: MAX_PROMOTABLE_DURABLE_VALUE + 0.01
+    durableValue: 0.46
   }, settings, profile, context);
   const disposable = getPromotionDecision({
     ...base,
-    durableValue: MAX_PROMOTABLE_DURABLE_VALUE
+    durableValue: 0.45
   }, settings, profile, context);
 
   assert.ok(valuable.boost > 0);
   assert.equal(valuable.promote, false);
   assert.equal(valuable.durableEligible, false);
   assert.equal(disposable.promote, true);
+});
+
+test("strictness slider controls both stimulation and durable-value gates", () => {
+  assert.equal(promotionDurableLimit(0.5), 0.65);
+  assert.equal(promotionDurableLimit(0.72), 0.45);
+  assert.equal(promotionDurableLimit(0.95), 0.25);
+
+  const curation = {
+    promote: true,
+    dopamineScore: 0.66,
+    durableValue: 0.6,
+    primaryDriver: "instant_gratification"
+  };
+  const lenient = getPromotionDecision(curation, { promotionThreshold: 0.5 }, {}, {});
+  const balanced = getPromotionDecision(curation, { promotionThreshold: 0.72 }, {}, {});
+  assert.equal(lenient.promote, true);
+  assert.equal(balanced.promote, false);
+  assert.equal(lenient.durableLimit, 0.65);
+  assert.equal(balanced.durableLimit, 0.45);
 });
 
 test("less feedback vetoes the same item immediately", () => {

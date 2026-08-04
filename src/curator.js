@@ -12,7 +12,6 @@
 
   const {
     DRIVER_KEYS,
-    MAX_PROMOTABLE_DURABLE_VALUE,
     PROMPT_VERSION,
     normalizeCurations,
     parseJsonContent
@@ -20,7 +19,7 @@
 
   const SYSTEM_PROMPT = `Classify visible X feed excerpts for DUMBER.
 
-Set promote=true only when immediate attention capture is high, durable value is at most ${MAX_PROMOTABLE_DURABLE_VALUE}, and the excerpt is sufficient. Attention capture includes intense emotion, identity reinforcement, curiosity gaps, reaction chains, frictionless exploration, instant gratification, and status signaling.
+Set promote=true when dopamineScore is at least 0.5, durableValue is at most 0.65, and the excerpt is sufficient. This is a broad candidate flag; local settings apply the user's final strictness. Attention capture includes intense emotion, identity reinforcement, curiosity gaps, reaction chains, frictionless exploration, instant gratification, and status signaling.
 
 Curiosity, emotion, popularity, novelty, or entertainment alone are insufficient. Concrete projects, useful tools, original work, substantive news, research, detailed tutorials, sourced explanations, and actionable techniques normally have durable value; set promote=false. This is not a truth, morality, politics, or educational-value classifier. Humor, art, relationships, play, news, and ordinary entertainment are not automatically low value. Default to false when uncertain.
 

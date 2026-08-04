@@ -177,7 +177,9 @@
   }
 
   function updateThreshold() {
-    thresholdOutput.value = `${Math.round(Number(threshold.value) * 100)}%`;
+    const value = Number(threshold.value);
+    const label = value <= 0.6 ? "更多" : value >= 0.82 ? "更严格" : "均衡";
+    thresholdOutput.value = `${label} · ${Math.round(value * 100)}%`;
   }
 
   function toggleKeyVisibility() {
