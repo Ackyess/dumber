@@ -264,8 +264,8 @@ def run() -> None:
         assert "已精选 0" in page.locator(".dumber-activity").inner_text()
         assert page.locator(".dumber-activity").get_attribute("role") == "status"
         assert page.locator(".dumber-activity").evaluate(
-            "element => ({ width: element.offsetWidth, height: element.offsetHeight })"
-        ) == {"width": 270, "height": 74}
+            "element => ({ width: element.offsetWidth, height: element.offsetHeight, right: Math.round(innerWidth - element.getBoundingClientRect().right) })"
+        ) == {"width": 270, "height": 74, "right": 104}
         assert page.locator(".dumber-activity-signal").evaluate(
             "element => ({ cssWidth: element.offsetWidth, cssHeight: element.offsetHeight, width: element.width, height: element.height, running: element.dataset.running })"
         ) == {"cssWidth": 56, "cssHeight": 56, "width": 64, "height": 64, "running": "true"}
@@ -363,34 +363,29 @@ def run() -> None:
             "element => getComputedStyle(element, '::before').content"
         ) != "none"
         ring_background = page.locator("article").evaluate(
-            "element => getComputedStyle(element, '::after').backgroundImage"
+            "element => getComputedStyle(element, '::before').backgroundImage"
         )
-        assert "rgb(255, 50, 100)" in ring_background
-        assert "rgb(100, 70, 255)" in ring_background
+        assert "rgb(143, 255, 216)" in ring_background
+        assert "rgb(128, 200, 255)" in ring_background
+        assert "rgb(185, 140, 255)" in ring_background
+        assert "rgb(255, 135, 187)" in ring_background
+        assert "rgb(255, 224, 111)" in ring_background
         assert "conic-gradient" in ring_background
-        ring_mask = page.locator("article").evaluate(
-            "element => getComputedStyle(element, '::after').webkitMaskImage"
+        ring_filter = page.locator("article").evaluate(
+            "element => getComputedStyle(element, '::before').filter"
         )
-        assert "rgba(0, 0, 0, 0) 30%" in ring_mask
-        assert "rgba(255, 255, 255, 0.1) 36%" in ring_mask
-        assert page.locator("article").evaluate(
-            "element => element.style.getPropertyValue('--dumber-beam-inner')"
-        ) == ".42"
-        assert page.locator("article > .dumber-beam-bloom").count() == 1
-        beam_animations = page.locator("article").evaluate(
+        assert "saturate(1.45)" in ring_filter
+        assert "brightness(1.15)" in ring_filter
+        assert page.locator("article > .dumber-beam-bloom").count() == 0
+        spectrum_animations = page.locator("article").evaluate(
             """element => element.getAnimations({ subtree: true }).map((animation) => ({
               duration: animation.effect.getTiming().duration,
               pseudo: animation.effect.pseudoElement || null,
               name: animation.animationName || ''
             }))"""
         )
-        assert any(animation["duration"] == 1960 for animation in beam_animations)
-        assert any(
-            animation["duration"] == 12000
-            and animation["pseudo"] in {"::before", "::after"}
-            and animation["name"] == "dumber-beam-hue"
-            for animation in beam_animations
-        )
+        assert any(animation["duration"] == 3600 for animation in spectrum_animations)
+        assert not any(animation["name"] == "dumber-beam-hue" for animation in spectrum_animations)
         assert "fixture-host-pulse" in page.locator("article").evaluate(
             "element => getComputedStyle(element).animationName"
         )

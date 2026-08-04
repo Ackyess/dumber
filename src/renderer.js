@@ -15,24 +15,11 @@
       initial-value: 0deg;
     }
 
-    @property --dumber-beam-opacity {
-      syntax: "<number>";
-      inherits: true;
-      initial-value: 0;
-    }
-
     .dumber-vip {
       --dumber-angle: 0deg;
       --dumber-surface: rgba(250, 250, 253, .985);
       --dumber-ink: #11131a;
       --dumber-radius: 16px;
-      --dumber-beam-opacity: 0;
-      --dumber-beam-stroke: .26;
-      --dumber-beam-inner: .42;
-      --dumber-beam-bloom: .24;
-      --dumber-beam-brightness: 1.3;
-      --dumber-beam-saturation: 1.2;
-      --dumber-beam-shadow: rgba(255, 255, 255, .27);
       border-radius: var(--dumber-radius) !important;
       background-color: var(--dumber-surface) !important;
       box-shadow:
@@ -41,139 +28,35 @@
         0 18px 48px rgba(18, 14, 36, .12) !important;
     }
 
-    .dumber-vip.dumber-ring-contained::after {
+    .dumber-vip.dumber-ring-contained::before {
       content: "";
       position: absolute;
       inset: 0;
       z-index: 2;
       box-sizing: border-box;
-      padding: 1px;
+      padding: 2px;
       border-radius: inherit;
-      clip-path: inset(0 round var(--dumber-radius));
-      background:
-        conic-gradient(
+      background: conic-gradient(
           from var(--dumber-angle),
-          transparent 0%, transparent 54%,
-          rgba(255, 255, 255, .1) 57%,
-          rgba(255, 255, 255, .3) 60%,
-          rgba(255, 255, 255, .6) 63%,
-          rgba(255, 255, 255, .75) 66%,
-          rgba(255, 255, 255, .6) 69%,
-          rgba(255, 255, 255, .3) 72%,
-          rgba(255, 255, 255, .1) 75%,
-          transparent 78%, transparent 100%
-        ),
-        radial-gradient(ellipse 70px 40px at 33% -7.4%, rgb(255, 50, 100), transparent),
-        radial-gradient(ellipse 60px 35px at 12% -5%, rgb(40, 140, 255), transparent),
-        radial-gradient(ellipse 40px 70px at 2.1% 68.3%, rgb(50, 200, 80), transparent),
-        radial-gradient(ellipse 20px 35px at 2.1% 68.3%, rgb(30, 185, 170), transparent),
-        radial-gradient(ellipse 180px 32px at 74.4% 100%, rgb(100, 70, 255), transparent),
-        radial-gradient(ellipse 85px 26px at 55% 100%, rgb(40, 140, 255), transparent),
-        radial-gradient(ellipse 74px 32px at 93.9% 0%, rgb(255, 120, 40), transparent),
-        radial-gradient(ellipse 26px 42px at 100% 27.1%, rgb(240, 50, 180), transparent),
-        radial-gradient(ellipse 52px 48px at 100% 27.1%, rgb(180, 40, 240), transparent);
+          #8fffd8,
+          #80c8ff,
+          #b98cff,
+          #ff87bb,
+          #ffe06f,
+          #8fffd8
+        );
       pointer-events: none;
       -webkit-mask:
-        conic-gradient(
-          from var(--dumber-angle),
-          transparent 0%, transparent 30%,
-          rgba(255, 255, 255, .1) 36%, rgba(255, 255, 255, .35) 44%,
-          white 52%, white 80%,
-          rgba(255, 255, 255, .35) 86%, rgba(255, 255, 255, .1) 92%,
-          transparent 95%, transparent 100%
-        ),
         linear-gradient(#000 0 0) content-box,
         linear-gradient(#000 0 0);
-      -webkit-mask-composite: source-in, xor;
-      mask:
-        conic-gradient(
-          from var(--dumber-angle),
-          transparent 0%, transparent 30%,
-          rgba(255, 255, 255, .1) 36%, rgba(255, 255, 255, .35) 44%,
-          white 52%, white 80%,
-          rgba(255, 255, 255, .35) 86%, rgba(255, 255, 255, .1) 92%,
-          transparent 95%, transparent 100%
-        ),
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      mask-composite: intersect, exclude;
-      opacity: calc(var(--dumber-beam-opacity) * var(--dumber-beam-stroke));
-      animation: dumber-beam-hue 12s ease-in-out infinite;
-    }
-
-    .dumber-vip.dumber-ring-contained::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      border-radius: inherit;
-      clip-path: inset(0 round var(--dumber-radius));
-      background:
-        radial-gradient(ellipse 63px 36px at 33% -7.4%, rgba(255, 50, 100, .45), transparent),
-        radial-gradient(ellipse 54px 32px at 12% -5%, rgba(40, 140, 255, .45), transparent),
-        radial-gradient(ellipse 36px 63px at 2.1% 68.3%, rgba(50, 200, 80, .45), transparent),
-        radial-gradient(ellipse 18px 32px at 2.1% 68.3%, rgba(30, 185, 170, .45), transparent),
-        radial-gradient(ellipse 162px 29px at 74.4% 100%, rgba(100, 70, 255, .45), transparent),
-        radial-gradient(ellipse 77px 23px at 55% 100%, rgba(40, 140, 255, .45), transparent),
-        radial-gradient(ellipse 67px 29px at 93.9% 0%, rgba(255, 120, 40, .45), transparent),
-        radial-gradient(ellipse 23px 38px at 100% 27.1%, rgba(240, 50, 180, .45), transparent),
-        radial-gradient(ellipse 47px 43px at 100% 27.1%, rgba(180, 40, 240, .45), transparent);
-      box-shadow: inset 0 0 9px 1px var(--dumber-beam-shadow);
-      -webkit-mask-image:
-        conic-gradient(from var(--dumber-angle), transparent 0%, transparent 30%, rgba(255,255,255,.1) 36%, rgba(255,255,255,.35) 44%, white 52%, white 80%, rgba(255,255,255,.35) 86%, rgba(255,255,255,.1) 92%, transparent 95%, transparent 100%),
-        linear-gradient(white, transparent 28px, transparent calc(100% - 28px), white),
-        linear-gradient(to right, white, transparent 28px, transparent calc(100% - 28px), white);
-      -webkit-mask-composite: source-in, source-over;
-      mask-image:
-        conic-gradient(from var(--dumber-angle), transparent 0%, transparent 30%, rgba(255,255,255,.1) 36%, rgba(255,255,255,.35) 44%, white 52%, white 80%, rgba(255,255,255,.35) 86%, rgba(255,255,255,.1) 92%, transparent 95%, transparent 100%),
-        linear-gradient(white, transparent 28px, transparent calc(100% - 28px), white),
-        linear-gradient(to right, white, transparent 28px, transparent calc(100% - 28px), white);
-      mask-composite: intersect, add;
-      pointer-events: none;
-      opacity: calc(var(--dumber-beam-opacity) * var(--dumber-beam-inner));
-      animation: dumber-beam-hue 12s ease-in-out infinite;
-    }
-
-    .dumber-vip.dumber-ring-contained > .dumber-beam-bloom {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      box-sizing: border-box;
-      padding: 1px;
-      border-radius: inherit;
-      clip-path: inset(0 round var(--dumber-radius));
-      background: conic-gradient(
-        from var(--dumber-angle),
-        transparent 0%, transparent 58%,
-        rgba(255,255,255,.03) 62%, rgba(255,255,255,.08) 65%,
-        rgba(255,255,255,.2) 67%, rgba(255,255,255,.45) 69%,
-        rgba(255,255,255,.85) 70%, rgba(255,255,255,.85) 70.5%,
-        rgba(255,255,255,.45) 71.5%, rgba(255,255,255,.2) 73%,
-        rgba(255,255,255,.08) 75%, rgba(255,255,255,.03) 78%,
-        transparent 82%
-      );
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask-composite: exclude;
-      filter: blur(8px) brightness(var(--dumber-beam-brightness)) saturate(var(--dumber-beam-saturation));
-      opacity: calc(var(--dumber-beam-opacity) * var(--dumber-beam-bloom));
-      pointer-events: none;
+      filter: saturate(1.45) brightness(1.15) drop-shadow(0 0 4px rgba(185, 140, 255, .44));
     }
 
     .dumber-vip.dumber-ring-outline {
       outline: 2px solid #b98cff !important;
       outline-offset: -2px !important;
-    }
-
-    @keyframes dumber-beam-hue {
-      0%, 100% { filter: hue-rotate(-30deg) brightness(var(--dumber-beam-brightness)) saturate(var(--dumber-beam-saturation)); }
-      50% { filter: hue-rotate(30deg) brightness(var(--dumber-beam-brightness)) saturate(var(--dumber-beam-saturation)); }
-    }
-
-    .dumber-vip.dumber-beam-paused::before,
-    .dumber-vip.dumber-beam-paused::after {
-      animation-play-state: paused !important;
     }
 
     .dumber-vip:hover,
@@ -361,7 +244,7 @@
 
     .dumber-activity {
       position: fixed;
-      right: 16px;
+      right: clamp(12px, calc(100vw - 282px), 104px);
       bottom: 16px;
       z-index: 2147483646;
       display: grid;
@@ -499,8 +382,6 @@
       .dumber-sidecar { transition: opacity 80ms linear, visibility 0s linear 80ms; transform: none; }
       .dumber-activity,
       .dumber-activity-label::before { animation: none !important; transition: none !important; }
-      .dumber-vip.dumber-ring-contained::before,
-      .dumber-vip.dumber-ring-contained::after { animation: none !important; }
       .dumber-emphasis {
         animation: none !important;
         transform: scale(1.08);
@@ -565,15 +446,13 @@
     const analyzedFingerprints = new Set();
     const selectedFingerprints = new Set();
     const reducedMotion = win.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
-    const beamObserver = typeof win.IntersectionObserver === "function"
+    const spectrumObserver = typeof win.IntersectionObserver === "function"
       ? new win.IntersectionObserver((entries) => {
           for (const entry of entries) {
             const record = records.get(entry.target);
             if (!record) continue;
-            entry.target.classList.toggle("dumber-beam-paused", !entry.isIntersecting);
             const action = entry.isIntersecting ? "play" : "pause";
             record.spectrumAnimation?.[action]?.();
-            record.beamFadeAnimation?.[action]?.();
           }
         }, { rootMargin: "256px" })
       : null;
@@ -653,24 +532,7 @@
       card.style.setProperty("--dumber-surface", dark ? "rgba(17, 18, 24, .985)" : "rgba(250, 250, 253, .985)");
       card.style.setProperty("--dumber-ink", dark ? "#f7f8fb" : "#11131a");
       card.style.setProperty("--dumber-radius", computed?.borderRadius && computed.borderRadius !== "0px" ? computed.borderRadius : "16px");
-      card.style.setProperty("--dumber-beam-stroke", ".26");
-      card.style.setProperty("--dumber-beam-inner", ".42");
-      card.style.setProperty("--dumber-beam-bloom", ".24");
-      card.style.setProperty("--dumber-beam-saturation", "1.2");
-      card.style.setProperty("--dumber-beam-shadow", dark ? "rgba(255, 255, 255, .27)" : "rgba(0, 0, 0, .14)");
-
-      let beamBloom = previous?.beamBloom;
-      if (card.classList.contains("dumber-ring-contained") && (!beamBloom?.isConnected || beamBloom.parentElement !== card)) {
-        beamBloom?.remove?.();
-        beamBloom = doc.createElement("span");
-        beamBloom.className = "dumber-beam-bloom";
-        beamBloom.dataset.dumberOwned = "";
-        beamBloom.setAttribute("aria-hidden", "true");
-        card.append(beamBloom);
-      } else if (!card.classList.contains("dumber-ring-contained")) {
-        beamBloom?.remove?.();
-        beamBloom = null;
-      }
+      card.querySelector?.(":scope > .dumber-beam-bloom")?.remove();
 
       const payload = {
         candidate,
@@ -686,13 +548,11 @@
         emphasisApplied: reuseEmphasis && previous?.emphasisApplied === true,
         emphasisPhrases: reuseEmphasis ? previous?.emphasisPhrases || [] : [],
         emphasisSpans: reuseEmphasis ? previous?.emphasisSpans || [] : [],
-        beamBloom,
-        spectrumAnimation: previous?.spectrumAnimation || null,
-        beamFadeAnimation: previous?.beamFadeAnimation || null
+        spectrumAnimation: previous?.spectrumAnimation || null
       };
       records.set(card, record);
       markedCards.add(card);
-      beamObserver?.observe(card);
+      spectrumObserver?.observe(card);
       syncSpectrumAnimation(card, record);
       if (activeCard === card) show(card, payload);
     }
@@ -751,13 +611,9 @@
 
     function emphasisNeedsRepair(card) {
       const record = records.get(card);
-      return Boolean(record && (
-        (card.classList.contains("dumber-ring-contained")
-          && (!record.beamBloom?.isConnected || record.beamBloom.parentElement !== card))
-        || (record.emphasisApplied
-          && record.emphasisSpans.length
-          && record.emphasisSpans.some((span) => !span.isConnected || !span.classList.contains("dumber-emphasis")))
-      ));
+      return Boolean(record?.emphasisApplied
+        && record.emphasisSpans.length
+        && record.emphasisSpans.some((span) => !span.isConnected || !span.classList.contains("dumber-emphasis")));
     }
 
     function unmark(card, options = {}) {
@@ -766,7 +622,6 @@
       card?.classList?.remove("dumber-vip");
       card?.classList?.remove("dumber-ring-contained");
       card?.classList?.remove("dumber-ring-outline");
-      card?.classList?.remove("dumber-beam-paused");
       if (card?.dataset) {
         delete card.dataset.dumberPromotion;
         delete card.dataset.dumberPromotionLabel;
@@ -776,19 +631,12 @@
       card?.style?.removeProperty("--dumber-ink");
       card?.style?.removeProperty("--dumber-radius");
       card?.style?.removeProperty("--dumber-angle");
-      card?.style?.removeProperty("--dumber-beam-opacity");
-      card?.style?.removeProperty("--dumber-beam-stroke");
-      card?.style?.removeProperty("--dumber-beam-inner");
-      card?.style?.removeProperty("--dumber-beam-bloom");
-      card?.style?.removeProperty("--dumber-beam-saturation");
-      card?.style?.removeProperty("--dumber-beam-shadow");
       for (const element of record?.primaryElements || []) element.classList?.remove("dumber-primary");
       for (const element of record?.secondaryElements || []) element.classList?.remove("dumber-secondary");
       for (const element of record?.expandableElements || []) element.classList?.remove("dumber-expanded");
-      record?.beamBloom?.remove?.();
+      card?.querySelector?.(":scope > .dumber-beam-bloom")?.remove();
       record?.spectrumAnimation?.cancel?.();
-      record?.beamFadeAnimation?.cancel?.();
-      beamObserver?.unobserve(card);
+      spectrumObserver?.unobserve(card);
       records.delete(card);
       markedCards.delete(card);
       if (!options.keepSidecar && activeCard === card) hide();
@@ -798,15 +646,11 @@
       if (!record) return;
       if (reducedMotion?.matches || typeof card.animate !== "function") {
         record.spectrumAnimation?.cancel?.();
-        record.beamFadeAnimation?.cancel?.();
         record.spectrumAnimation = null;
-        record.beamFadeAnimation = null;
         card.style.setProperty("--dumber-angle", "0deg");
-        card.style.setProperty("--dumber-beam-opacity", "1");
         return;
       }
       card.style.removeProperty("--dumber-angle");
-      card.style.removeProperty("--dumber-beam-opacity");
       if (record.spectrumAnimation && record.spectrumAnimation.playState !== "idle") return;
       record.spectrumAnimation?.cancel?.();
       try {
@@ -824,28 +668,12 @@
               { "--dumber-angle": "360deg" }
             ];
         record.spectrumAnimation = card.animate(frames, {
-          duration: 1960,
+          duration: 3600,
           easing: "linear",
           iterations: Infinity
         });
-        if (card.classList.contains("dumber-ring-contained")) {
-          record.beamFadeAnimation?.cancel?.();
-          record.beamFadeAnimation = card.animate([
-            { "--dumber-beam-opacity": "0" },
-            { "--dumber-beam-opacity": "1" }
-          ], {
-            duration: 600,
-            easing: "ease",
-            fill: "forwards"
-          });
-        }
-        if (card.classList.contains("dumber-beam-paused")) {
-          record.spectrumAnimation.pause();
-          record.beamFadeAnimation?.pause?.();
-        }
       } catch {
         record.spectrumAnimation = null;
-        card.style.setProperty("--dumber-beam-opacity", "1");
       }
     }
 
@@ -1095,7 +923,7 @@
     function destroy() {
       hide();
       activityObserver.disconnect();
-      beamObserver?.disconnect();
+      spectrumObserver?.disconnect();
       if (activityFrame) {
         win.cancelAnimationFrame?.(activityFrame);
         win.clearTimeout(activityFrame);

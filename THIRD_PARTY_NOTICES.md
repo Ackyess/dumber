@@ -1,11 +1,10 @@
 # Third-party notices
 
-DUMBER 0.3.11 contains native, dependency-free adaptations of these projects:
+DUMBER 0.3.13 contains a native, dependency-free adaptation of this project:
 
-- [Border Beam](https://github.com/Jakubantalik/border-beam), pinned for this adaptation at `647d26e2a27f26587110fea5a8410c80deb5ac5e`.
 - [Thinking Orbs](https://github.com/Jakubantalik/thinking-orbs), pinned for this adaptation at `e94f207ea122f8cca0aaa6409ab7fe82d55c38f1`.
 
-Both projects are distributed under the following license:
+The project is distributed under the following license:
 
 MIT License
 
