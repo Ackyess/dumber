@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DUMBER promo storyboard v2</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; margin: 0; overflow: hidden; }
+    body {
+      color: #f7f8fc;
+      background:
+        radial-gradient(circle at 16% 8%, rgba(0, 245, 255, .08), rgba(0, 245, 255, 0) 24%),
+        radial-gradient(circle at 88% 92%, rgba(255, 46, 136, .08), rgba(255, 46, 136, 0) 26%),
+        #050509;
+      font-family: "Archivo Black", "Arial Black", sans-serif;
+    }
+    .board {
+      width: 100%;
+      height: 100%;
+      padding: 30px 38px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    header {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a2b33;
+      padding-bottom: 18px;
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+    }
+    .brand strong {
+      font-size: 48px;
+      line-height: 1;
+      letter-spacing: -.055em;
+    }
+    .brand span {
+      color: #9aa0ad;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 18px;
+      letter-spacing: .08em;
+    }
+    .campaign {
+      font-size: 25px;
+      letter-spacing: -.035em;
+    }
+    .campaign i {
+      color: #00f5ff;
+      font-style: normal;
+    }
+    .grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 18px;
+    }
+    .shot {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #30313a;
+      border-radius: 28px;
+      background: #08090d;
+      isolation: isolate;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    }
+    .feed {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform-origin: center;
+      z-index: -4;
+    }
+    .a .feed { object-position: center 17%; filter: brightness(.84) saturate(.88); }
+    .b .feed { object-position: center 43%; filter: brightness(.75) saturate(.98); transform: scale(1.055); }
+    .c .feed { object-position: center 14%; filter: brightness(.92) saturate(1.12); transform: scale(1.04); }
+    .d .feed { object-position: center 54%; filter: blur(2px) brightness(.30) saturate(1.2); transform: scale(1.07); }
+    .shade {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(90deg, rgba(5, 5, 9, .58), rgba(5, 5, 9, 0) 46%, rgba(5, 5, 9, .14));
+    }
+    .shot-label {
+      position: absolute;
+      top: 20px;
+      left: 22px;
+      z-index: 8;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 999px;
+      background: rgba(7, 8, 12, .82);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .42);
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 15px;
+      letter-spacing: .04em;
+      backdrop-filter: blur(14px);
+    }
+    .shot-label b { color: #ffd45c; font-weight: 700; }
+    .shot-label span { color: #d9dce5; }
+    .status {
+      position: absolute;
+      right: 38px;
+      bottom: 34px;
+      z-index: 7;
+      width: 350px;
+      height: 104px;
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      align-items: center;
+      padding: 14px 24px 14px 15px;
+      border: 1px solid #373843;
+      border-radius: 58px;
+      background: rgba(18, 18, 22, .94);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, .6), 0 0 28px rgba(102, 92, 255, .12);
+    }
+    .b .status { right: 30px; top: 66px; bottom: auto; transform: scale(.9); transform-origin: right top; }
+    .orb {
+      position: relative;
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 48%, #101016 0 31%, rgba(16, 16, 22, .3) 32% 41%, rgba(16, 16, 22, 0) 42%),
+        conic-gradient(from 210deg, #00f5ff, #665cff, #b64cff, #ff2e88, #ffd45c, #00f5ff);
+      box-shadow: inset 0 0 15px #09090d, 0 0 14px rgba(0, 245, 255, .35), 0 0 20px rgba(255, 46, 136, .22);
+    }
+    .orb::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 2px dotted rgba(255, 255, 255, .72);
+      border-radius: 50%;
+      transform: rotate(-18deg) scaleY(.75);
+      opacity: .68;
+    }
+    .status-main {
+      font-size: 27px;
+      line-height: 1;
+      letter-spacing: -.035em;
+      background: linear-gradient(90deg, #abfff1, #f7f8fc 55%, #ffd45c);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .status-count {
+      margin-top: 9px;
+      color: #a9adb7;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+    }
+    .status-count .cyan { color: #00f5ff; }
+    .status-count .warm { color: #ffd45c; }
+    .stream {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      mix-blend-mode: screen;
+    }
+    .stream .glow { fill: none; stroke: url(#spectrum); stroke-width: 24; opacity: .35; filter: blur(13px); }
+    .stream .body { fill: none; stroke: url(#spectrum); stroke-width: 7; opacity: .94; }
+    .stream .core { fill: none; stroke: rgba(255, 255, 255, .92); stroke-width: 1.4; opacity: .8; }
+    .b .stream { transform: rotate(2deg) scale(1.03); }
+    .card-lock {
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      top: 84px;
+      height: 270px;
+      z-index: 4;
+      border: 4px solid rgba(255, 255, 255, .15);
+      border-radius: 28px;
+      background:
+        linear-gradient(#101117, #101117) padding-box,
+        linear-gradient(105deg, #00f5ff, #665cff 26%, #b64cff 47%, #ff2e88 70%, #ffd45c 91%, #00f5ff) border-box;
+      box-shadow:
+        0 0 18px rgba(0, 245, 255, .32),
+        0 0 24px rgba(182, 76, 255, .23),
+        0 0 28px rgba(255, 46, 136, .25);
+      opacity: .5;
+      mix-blend-mode: screen;
+    }
+    .hotwords {
+      position: absolute;
+      left: 118px;
+      top: 122px;
+      z-index: 7;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      transform: rotate(-1deg);
+    }
+    .hotwords span {
+      padding: 5px 10px 7px;
+      border-radius: 8px;
+      background: rgba(11, 11, 16, .85);
+      font-size: 27px;
+      letter-spacing: -.04em;
+      text-shadow: 0 0 16px currentColor;
+      box-shadow: 0 0 22px color-mix(in srgb, currentColor 32%, rgba(0, 0, 0, 0));
+    }
+    .hotwords span:nth-child(1) { color: #00f5ff; transform: translateY(12px) scale(1.03); }
+    .hotwords span:nth-child(2) { color: #b64cff; transform: translateY(-7px) scale(1.11); }
+    .hotwords span:nth-child(3) { color: #ff2e88; transform: translateY(10px) scale(1.06); }
+    .hotwords span:nth-child(4) { color: #ffd45c; transform: translateY(-3px) scale(1.12); }
+    .meme-flash {
+      position: absolute;
+      right: 43px;
+      bottom: 38px;
+      z-index: 8;
+      width: 84px;
+      height: 84px;
+      padding: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, .98) 0 54%, rgba(102, 92, 255, .52) 56%, rgba(255, 46, 136, .14) 75%);
+      box-shadow: 0 0 22px rgba(0, 245, 255, .35), 0 0 35px rgba(255, 46, 136, .28);
+    }
+    .meme-flash img { width: 100%; height: 100%; object-fit: contain; }
+    .lockup {
+      position: absolute;
+      left: 70px;
+      top: 96px;
+      z-index: 8;
+      max-width: 720px;
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .logo-row img {
+      width: 76px;
+      height: 76px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 14px rgba(0, 245, 255, .32));
+    }
+    .lockup h1 {
+      margin: 0;
+      font-size: 88px;
+      line-height: .9;
+      letter-spacing: -.065em;
+    }
+    .tagline {
+      margin-top: 32px;
+      font-size: 48px;
+      line-height: .98;
+      letter-spacing: -.055em;
+      max-width: 620px;
+    }
+    .tagline em {
+      display: inline-block;
+      color: #f7f8fc;
+      font-style: normal;
+      text-shadow: 0 0 24px rgba(182, 76, 255, .3);
+    }
+    .submeta {
+      margin-top: 25px;
+      color: #b3b7c2;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 15px;
+      letter-spacing: .08em;
+    }
+    .underline {
+      width: 640px;
+      height: 50px;
+      margin-top: 4px;
+      overflow: visible;
+      mix-blend-mode: screen;
+    }
+    .underline path:first-of-type { fill: none; stroke: url(#end-spectrum); stroke-width: 18; opacity: .38; filter: blur(11px); }
+    .underline path:last-of-type { fill: none; stroke: url(#end-spectrum); stroke-width: 4; }
+    .continuity {
+      position: absolute;
+      right: 22px;
+      bottom: 18px;
+      z-index: 8;
+      color: rgba(247, 248, 252, .66);
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 13px;
+      letter-spacing: .05em;
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <header>
+      <div class="brand"><strong>DUMBER</strong><span>PROMO / 12 SEC / DESIGN V2</span></div>
+      <div class="campaign">LET THE FEED <i>PULL YOU IN.</i></div>
+    </header>
+    <section class="grid">
+      <figure class="shot a">
+        <img class="feed" src="reference/feed-real-unselected.png" alt="">
+        <div class="shade"></div>
+        <div class="shot-label"><b>00.00</b><span>ALREADY INSIDE</span></div>
+        <div class="status">
+          <div class="orb"></div>
+          <div><div class="status-main">Scanning....</div><div class="status-count">已分析 <span class="cyan">30</span> · 已精选 <span class="warm">11</span></div></div>
+        </div>
+        <div class="continuity">NO INTRO · FEED ALREADY MOVING ↓</div>
+      </figure>
+
+      <figure class="shot b">
+        <img class="feed" src="reference/feed-real-unselected.png" alt="">
+        <div class="shade"></div>
+        <div class="shot-label"><b>02.60</b><span>THE PULL</span></div>
+        <div class="status">
+          <div class="orb"></div>
+          <div><div class="status-main">Scanning....</div><div class="status-count">已分析 <span class="cyan">38</span> · 已精选 <span class="warm">11</span></div></div>
+        </div>
+        <svg class="stream" viewBox="0 0 914 430" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="spectrum" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd45c"/><stop offset=".22" stop-color="#ff2e88"/><stop offset=".48" stop-color="#b64cff"/><stop offset=".72" stop-color="#665cff"/><stop offset="1" stop-color="#00f5ff"/></linearGradient></defs>
+          <path class="glow" d="M 815 -20 C 756 76 790 124 650 170 C 482 224 632 296 390 326 C 238 345 190 402 -30 452"/>
+          <path class="body" d="M 815 -20 C 756 76 790 124 650 170 C 482 224 632 296 390 326 C 238 345 190 402 -30 452"/>
+          <path class="core" d="M 815 -20 C 756 76 790 124 650 170 C 482 224 632 296 390 326 C 238 345 190 402 -30 452"/>
+        </svg>
+        <div class="continuity">ORB → CURRENT → NEXT CARD</div>
+      </figure>
+
+      <figure class="shot c">
+        <img class="feed" src="reference/selected-feed-real.png" alt="">
+        <div class="card-lock"></div>
+        <div class="shot-label"><b>05.20</b><span>CAUGHT</span></div>
+        <div class="hotwords"><span>鼻祖</span><span>大量冗员</span><span>360 亿</span><span>700 亿</span></div>
+        <div class="meme-flash"><img src="reference/dumber-face.png" alt=""></div>
+        <div class="continuity">2–5 SHORT PHRASES · MULTICOLOR · READABLE</div>
+      </figure>
+
+      <figure class="shot d">
+        <img class="feed" src="reference/selected-feed-real.png" alt="">
+        <div class="shade"></div>
+        <div class="shot-label"><b>10.80</b><span>STAY IN IT</span></div>
+        <div class="lockup">
+          <div class="logo-row"><img src="reference/dumber-face.png" alt=""><h1>DUMBER</h1></div>
+          <div class="tagline">LET THE FEED <em>PULL YOU IN.</em></div>
+          <svg class="underline" viewBox="0 0 640 50" aria-hidden="true">
+            <defs><linearGradient id="end-spectrum" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00f5ff"/><stop offset=".26" stop-color="#665cff"/><stop offset=".5" stop-color="#b64cff"/><stop offset=".76" stop-color="#ff2e88"/><stop offset="1" stop-color="#ffd45c"/></linearGradient></defs>
+            <path d="M 5 29 C 120 6 206 42 316 25 C 425 7 506 40 635 19"/>
+            <path d="M 5 29 C 120 6 206 42 316 25 C 425 7 506 40 635 19"/>
+          </svg>
+          <div class="submeta">OPEN SOURCE · CHROME</div>
+        </div>
+        <div class="continuity">FEED NEVER STOPS ↓</div>
+      </figure>
+    </section>
+  </main>
+</body>
+</html>

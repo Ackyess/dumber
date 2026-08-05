@@ -1,0 +1,39 @@
+{
+  "title": "DUMBER — Let the feed pull you in",
+  "durationSeconds": 12,
+  "format": { "width": 1920, "height": 1080, "fps": 30 },
+  "campaignLine": "LET THE FEED PULL YOU IN.",
+  "visualSystem": "one continuous real X feed; one iridescent current; no standalone poster scenes",
+  "audio": "close low-frequency air, light counter ticks, one selection bass hit, neon sparks, glass resolve",
+  "beats": [
+    {
+      "id": "already-inside",
+      "in": 0,
+      "out": 1.6,
+      "source": "captures/x-real.mov",
+      "treatment": "feed already scrolling; scanning pill settles left of Grok; 100%-103% camera push"
+    },
+    {
+      "id": "the-pull",
+      "in": 1.6,
+      "out": 3.4,
+      "source": "captures/x-real.mov",
+      "treatment": "analyzed counter climbs; one spectrum current leaves the orb and travels down the feed"
+    },
+    {
+      "id": "caught-and-deeper",
+      "in": 3.4,
+      "out": 9.5,
+      "source": "captures/x-real.mov",
+      "treatment": "selected-card ignition, 2-5 short multicolor phrase accents, continuous scroll; face flashes inside orb for 0.35s"
+    },
+    {
+      "id": "stay-in-it",
+      "in": 9.5,
+      "out": 12,
+      "source": "captures/x-real.mov",
+      "text": "DUMBER\nLET THE FEED PULL YOU IN.\nOPEN SOURCE · CHROME",
+      "treatment": "focus pull over still-moving feed; spectrum current becomes the wordmark underline"
+    }
+  ]
+}

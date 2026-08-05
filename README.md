@@ -4,6 +4,20 @@ DUMBER 是一个 Chrome Manifest V3 扩展。它不是过滤器、警告器或�
 
 当前版本：`0.3.13`
 
+## 宣传片工程
+
+仓库同时归档 GetDumber 的 HyperFrames 宣传片工程：
+
+- `marketing/promo-12s/hyperframes-mobile/`：最终采用的 1080×1920、15.8 秒移动版；
+- `marketing/promo-12s/hyperframes-preview/`：较早的 1920×1080 桌面版探索；
+- `marketing/promo-12s/RETROSPECTIVE.md`：设计决策、返工原因和下一次制作流程；
+- `marketing/promo-12s/STORYBOARD.md`：开发阶段的连续镜头设计稿。
+
+生成缓存、检查截图和旧渲染不会进入 Git。最终 MP4 作为
+[v0.3.13 GitHub Release](https://github.com/Ackyess/dumber/releases/tag/v0.3.13)
+附件保存。音乐与音效许可见移动版工程内的 `MUSIC_LICENSE.md` 和
+`SFX_LICENSE.md`。
+
 ## 运行时体验
 
 DUMBER 会读取进入视口的 X 内容卡片，把可见上下文发送到用户自行配置的 OpenAI-compatible Chat Completions 接口。模型返回结构化策展结果后，命中内容会被升级为 VIP 阅读卡片：

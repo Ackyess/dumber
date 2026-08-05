@@ -1,0 +1,10 @@
+{
+  "duration": 15,
+  "assertions": [
+    { "kind": "appearsBy", "selector": "#x-page", "bySec": 0.4 },
+    { "kind": "appearsBy", "selector": "#status-pill", "bySec": 0.9 },
+    { "kind": "before", "a": "#status-pill", "b": "#brand-name" },
+    { "kind": "staysInFrame", "selector": "#brand-name" },
+    { "kind": "keepsMoving", "withinSelector": "#dumber-promo-mobile", "maxStaticSec": 2.6 }
+  ]
+}

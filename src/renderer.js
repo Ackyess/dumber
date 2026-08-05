@@ -72,6 +72,10 @@
       color: var(--dumber-ink) !important;
     }
 
+    .dumber-vip [data-dumber-emphasis-source] {
+      display: contents;
+    }
+
     .dumber-vip .dumber-emphasis {
       position: relative;
       z-index: 3;
@@ -290,10 +294,11 @@
       width: 56px;
       height: 56px;
       filter:
-        saturate(1.48)
-        brightness(1.12)
-        drop-shadow(0 0 2px rgba(128, 200, 255, .72))
-        drop-shadow(0 0 7px rgba(185, 140, 255, .34));
+        saturate(1.9)
+        brightness(1.22)
+        contrast(1.28)
+        drop-shadow(0 0 3px rgba(94, 189, 255, .82))
+        drop-shadow(0 0 8px rgba(185, 140, 255, .52));
     }
 
     .dumber-activity-copy {
@@ -488,6 +493,7 @@
     doc.addEventListener("pointerout", handlePointerOut, true);
     doc.addEventListener("focusin", handleFocusIn, true);
     doc.addEventListener("focusout", handleFocusOut, true);
+    doc.addEventListener("click", handleHostTextMutation, true);
     sidecar.addEventListener("pointerenter", cancelHide, { passive: true });
     sidecar.addEventListener("pointerleave", scheduleHide, { passive: true });
     moreButton.addEventListener("click", () => void savePreference("more"));
@@ -548,6 +554,7 @@
         emphasisApplied: reuseEmphasis && previous?.emphasisApplied === true,
         emphasisPhrases: reuseEmphasis ? previous?.emphasisPhrases || [] : [],
         emphasisSpans: reuseEmphasis ? previous?.emphasisSpans || [] : [],
+        emphasisSources: reuseEmphasis ? previous?.emphasisSources || [] : [],
         spectrumAnimation: previous?.spectrumAnimation || null
       };
       records.set(card, record);
@@ -563,13 +570,15 @@
       const phrases = Shared.normalizeEmphasis(emphasis, candidate?.context?.text).phrases;
       const reusable = record.emphasisApplied
         && sameStringArray(record.emphasisPhrases, phrases)
+        && record.emphasisSources.every((source) => source.isConnected)
         && record.emphasisSpans.every((span) => span.isConnected && span.classList.contains("dumber-emphasis"));
       if (!reusable) {
         clearEmphasis(record, card);
         const spans = [];
+        const sources = [];
         const palettes = EMPHASIS_PALETTES[isDarkSurface(card, win) ? "dark" : "light"];
         for (const element of record.primaryElements) {
-          spans.push(...wrapExactPhrases(element, phrases, doc, 8 - spans.length));
+          spans.push(...wrapExactPhrases(element, phrases, doc, 8 - spans.length, sources));
           if (spans.length >= 8) break;
         }
         spans.forEach((span, index) => {
@@ -583,6 +592,7 @@
         record.emphasisApplied = true;
         record.emphasisPhrases = phrases;
         record.emphasisSpans = spans;
+        record.emphasisSources = sources;
       }
       const count = record.emphasisSpans.filter((span) => span.isConnected).length;
       record.payload.emphasisCount = count;
@@ -592,18 +602,18 @@
     }
 
     function clearEmphasis(record, card) {
-      const parents = new Set();
-      for (const span of record?.emphasisSpans || []) {
-        const parent = span.parentNode;
-        if (!parent || !span.classList?.contains("dumber-emphasis")) continue;
-        parents.add(parent);
-        span.replaceWith(doc.createTextNode(span.textContent || ""));
+      const sources = record?.emphasisSources || [];
+      for (const source of sources) {
+        const original = source.__dumberOriginalTextNode;
+        if (!source.parentNode || !original) continue;
+        original.nodeValue = source.textContent || "";
+        source.replaceWith(original);
       }
-      for (const parent of parents) parent.normalize?.();
       if (record) {
         record.emphasisApplied = false;
         record.emphasisPhrases = [];
         record.emphasisSpans = [];
+        record.emphasisSources = [];
         if (record.payload) record.payload.emphasisCount = 0;
       }
       if (card?.dataset) delete card.dataset.dumberEmphasisCount;
@@ -796,6 +806,20 @@
       const related = event.relatedTarget;
       if (related && (activeCard.contains?.(related) || sidecar.contains?.(related))) return;
       scheduleHide();
+    }
+
+    function handleHostTextMutation(event) {
+      if (!event.target?.closest?.('[data-testid="tweet-text-show-more-link"]')) return;
+      const card = findVipCard(event);
+      const record = records.get(card);
+      if (!record) return;
+      const phrases = record.emphasisPhrases.slice();
+      clearEmphasis(record, card);
+      if (!phrases.length) return;
+      win.requestAnimationFrame(() => {
+        const current = records.get(card);
+        if (current && card.isConnected) emphasize(card, current.payload.candidate, { phrases });
+      });
     }
 
     function findVipCard(event) {
@@ -1072,11 +1096,11 @@
   }
 
   const ORB_NEON = Object.freeze([
-    Object.freeze([143, 255, 216]),
-    Object.freeze([128, 200, 255]),
-    Object.freeze([185, 140, 255]),
-    Object.freeze([255, 135, 187]),
-    Object.freeze([255, 224, 111])
+    Object.freeze([0, 245, 255]),
+    Object.freeze([102, 92, 255]),
+    Object.freeze([182, 76, 255]),
+    Object.freeze([255, 46, 136]),
+    Object.freeze([255, 212, 92])
   ]);
 
   function drawComposingOrb(ctx, size, time) {
@@ -1131,7 +1155,7 @@
           z: projectedZ,
           r: (.935 + 1.445 * depth) * (1 - .25 * edge) * radiusScale,
           white: .52 - .44 * depth + .18 * edge,
-          a: .4 + .6 * depth
+          a: .58 + .42 * depth
         });
       }
     }
@@ -1145,7 +1169,7 @@
       const to = ORB_NEON[(Math.floor(scaled) + 1) % ORB_NEON.length];
       const mix = scaled - Math.floor(scaled);
       const ink = 1 - Math.min(1, Math.max(0, dot.white));
-      const intensity = .54 + .46 * ink;
+      const intensity = .78 + .22 * ink;
       const red = Math.round((from[0] + (to[0] - from[0]) * mix) * intensity);
       const green = Math.round((from[1] + (to[1] - from[1]) * mix) * intensity);
       const blue = Math.round((from[2] + (to[2] - from[2]) * mix) * intensity);
@@ -1187,7 +1211,7 @@
     });
   }
 
-  function wrapExactPhrases(rootElement, phraseValues, doc, limit = 8) {
+  function wrapExactPhrases(rootElement, phraseValues, doc, limit = 8, sources = []) {
     if (!rootElement || limit <= 0) return [];
     const phrases = [...new Set((phraseValues || []).filter(Boolean))]
       .sort((left, right) => right.length - left.length)
@@ -1201,7 +1225,7 @@
     const spans = [];
 
     for (const node of textNodes) {
-      if (spans.length >= limit || !node.parentNode || node.parentElement?.closest?.(".dumber-emphasis")) continue;
+      if (spans.length >= limit || !node.parentNode || node.parentElement?.closest?.("[data-dumber-emphasis-source]")) continue;
       const text = node.nodeValue || "";
       const lower = text.toLowerCase();
       const matches = [];
@@ -1234,7 +1258,12 @@
         cursor = match.index + match.length;
       }
       if (cursor < text.length) fragment.append(doc.createTextNode(text.slice(cursor)));
-      node.replaceWith(fragment);
+      const source = doc.createElement("span");
+      source.dataset.dumberEmphasisSource = "";
+      source.__dumberOriginalTextNode = node;
+      source.append(fragment);
+      node.replaceWith(source);
+      sources.push(source);
     }
     return spans;
   }

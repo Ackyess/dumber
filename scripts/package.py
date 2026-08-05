@@ -30,7 +30,7 @@ INSTALL_FILES = [
     "IMPLEMENTATION_STATUS.md",
 ]
 INSTALL_DIRS = ["assets", "src"]
-SOURCE_EXCLUDED_DIRS = {".git", "dist", "node_modules", "__pycache__", ".pytest_cache"}
+SOURCE_EXCLUDED_DIRS = {".git", "dist", "marketing", "node_modules", "__pycache__", ".pytest_cache"}
 SOURCE_EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 SECRET_PATTERNS = [
     (re.compile(rb"sk-[A-Za-z0-9_-]{16,}"), "OpenAI-style credential-like token"),

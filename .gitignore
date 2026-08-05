@@ -3,3 +3,23 @@ node_modules/
 dist/
 __pycache__/
 *.pyc
+
+# HyperFrames generated state. Keep authored compositions and their final inputs.
+marketing/**/.hyperframes/
+marketing/**/.thumbnails/
+marketing/**/.waveform-cache/
+marketing/**/snapshots/
+marketing/**/renders/
+marketing/**/*.log
+
+# Superseded audio experiments; the final composition references the two kept WAV files.
+marketing/promo-12s/hyperframes-mobile/.media/audio/bgm/
+marketing/promo-12s/hyperframes-mobile/.media/audio/sfx/*
+!marketing/promo-12s/hyperframes-mobile/.media/audio/sfx/sfx_004.mp3
+!marketing/promo-12s/hyperframes-mobile/.media/audio/sfx/sfx_012.wav
+marketing/promo-12s/hyperframes-mobile/.media/index.md
+marketing/promo-12s/hyperframes-mobile/.media/manifest.jsonl
+marketing/promo-12s/hyperframes-mobile/assets/audio/getdumber-bgm-flowers.wav
+marketing/promo-12s/hyperframes-mobile/assets/audio/getdumber-bgm-neon.wav
+marketing/promo-12s/hyperframes-mobile/assets/audio/getdumber-bgm-origami.wav
+marketing/promo-12s/hyperframes-mobile/assets/audio/getdumber-sound-design.wav

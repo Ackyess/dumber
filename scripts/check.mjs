@@ -9,7 +9,7 @@ const manifest = readJson("manifest.json");
 const packageJson = readJson("package.json");
 const lockJson = readJson("package-lock.json");
 const failures = [];
-const excludedDirectories = new Set([".git", "dist", "node_modules", "__pycache__", ".pytest_cache"]);
+const excludedDirectories = new Set([".git", "dist", "marketing", "node_modules", "__pycache__", ".pytest_cache"]);
 const projectFiles = walk(root, excludedDirectories);
 const runtimeFiles = walk(join(root, "src"), excludedDirectories);
 

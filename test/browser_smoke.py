@@ -466,6 +466,35 @@ def run() -> None:
         page.locator("article.dumber-vip").wait_for(state="visible")
         page.close()
 
+        page = create_fixture_page(browser, "x", configured=False, emphasis_delay_ms=700)
+        page.locator("article").evaluate(
+            """article => {
+              const text = article.querySelector('[data-testid="tweetText"]');
+              const hostTextNode = text.firstChild;
+              const button = document.createElement('button');
+              button.dataset.testid = 'tweet-text-show-more-link';
+              button.textContent = '显示更多';
+              button.addEventListener('click', () => {
+                hostTextNode.nodeValue = '所有人都在讨论的惊人结论：你绝对想不到最后发生了什么。这是完整正文。';
+                button.remove();
+              });
+              article.append(button);
+            }"""
+        )
+        page.evaluate(
+            "window.__dumberTest.updateSettings({ apiKey: 'fixture-key', model: 'fixture-model' })"
+        )
+        page.locator("article.dumber-vip").wait_for(state="visible")
+        page.wait_for_function("document.querySelector('article').dataset.dumberEnhancement === 'ready'")
+        assert page.locator(".dumber-emphasis").count() == 2
+        expand_started_at = page.evaluate("performance.now()")
+        page.locator('[data-testid="tweet-text-show-more-link"]').click()
+        page.wait_for_function("document.querySelector('[data-testid=tweetText]').textContent.includes('完整正文')")
+        assert page.locator('[data-testid="tweet-text-show-more-link"]').count() == 0
+        page.locator(".dumber-emphasis").first.wait_for(state="visible")
+        assert page.evaluate("performance.now()") - expand_started_at < 250
+        page.close()
+
         page = create_fixture_page(browser, "x")
         page.locator("article.dumber-vip").wait_for(state="visible")
         page.locator(".dumber-emphasis").first.wait_for(state="visible")
